@@ -103,16 +103,18 @@ export default class PitchController
         const audioSource = audioContext.createMediaStreamSource(stream);
 
         // Connect input to a bandpass filter (50 - 1000 Hz)
-        const from = 100;
+        const from = 50;
         const to = 1000;
         const geometricMean = Math.sqrt(from * to);
 
         const bandpass = audioContext.createBiquadFilter();
-        bandpass.type = 'bandpass';
-        bandpass.frequency.value = geometricMean;
-        bandpass.Q.value = geometricMean / (to - from);
+        // bandpass.type = 'bandpass';
+        // bandpass.frequency.value = geometricMean;
+        // bandpass.Q.value = geometricMean / (to - from);
+        bandpass.type = 'lowpass';
+        bandpass.frequency.value = 2000;
 
-        if (true)
+        if (false)
         {
             let slider = document.getElementById("freq");
 
@@ -120,23 +122,23 @@ export default class PitchController
             osc.frequency.setValueAtTime(440, audioContext.currentTime);
             osc.type = "sawtooth"
             osc.start();
-            // osc.connect(bandpass);
+            osc.connect(bandpass);
 
-            let osc2 = audioContext.createOscillator();
-            // osc2.type = "custom";
+            // let osc2 = audioContext.createOscillator();
+            // // osc2.type = "custom";
 
-            const n = 2048
-            let arr = new Float32Array(n);
-            let arr2 = new Float32Array(n);
-            for (let i = 0; i < n; i++)
-            {
-                arr[i] = Math.random() * (Math.random() > 0.5 ? 1 : -1);
-                arr2[i] = Math.random() * (Math.random() > 0.5 ? 1 : -1);
-            }
+            // const n = 2048
+            // let arr = new Float32Array(n);
+            // let arr2 = new Float32Array(n);
+            // for (let i = 0; i < n; i++)
+            // {
+            //     arr[i] = Math.random() * (Math.random() > 0.5 ? 1 : -1);
+            //     arr2[i] = Math.random() * (Math.random() > 0.5 ? 1 : -1);
+            // }
 
-            osc2.setPeriodicWave(audioContext.createPeriodicWave(arr, arr2))
-            osc2.start();
-            osc2.connect(bandpass);
+            // osc2.setPeriodicWave(audioContext.createPeriodicWave(arr, arr2))
+            // osc2.start();
+            // osc2.connect(bandpass);
 
             window.modifyFreq = function()
             {
@@ -165,19 +167,22 @@ export default class PitchController
         let scope = this;
         analyzer.port.onmessage = e =>{
 
-            let slider = document.getElementById("freq");
-            let spectrum = document.getElementById("spectrum");
             let detected = document.getElementById("detected");
+            let slider = document.getElementById("freq");
 
-            for (let i = 0; i < scope.fftSize/2; i++)
+            if (e.data.spectrum)
             {
-                spectrum.children[i].style.height = (50*e.data[i]) + "px";
+                let spectrum = document.getElementById("spectrum");
+    
+                for (let i = 0; i < scope.fftSize/2; i++)
+                {
+                    spectrum.children[i].style.height = (50*e.data.spectrum[i]) + "px";
+                } 
             }
-
-            let value = getFrequencyFromSpectrum(e.data, scope.sampleRate);            
-
-            detected.innerText = "Actual: " + slider.value + ", Detected: " + (value);
-
+            if (e.data.pitchInfo)
+            {
+                detected.innerHTML = "Actual: " + slider.value + ", Detected: " + (e.data.pitchInfo.pitch) + "<br>Confidence: " + e.data.pitchInfo.confidence;
+            }
         }
 
 

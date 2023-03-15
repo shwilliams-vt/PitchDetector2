@@ -1,48 +1,13 @@
 const ACF = "ACF";
 const HPS = "HPS";
 
-function getPeakBin(spectrum)
-{
-    let peakbin = -1;
-    for (let i = 1; i < spectrum.length / 2; i++)
-    {
-        if (spectrum[i-1] < spectrum[i] && spectrum[i+1] < spectrum[i])
-        {
-            peakbin = i;
-            break;
-        }
-    }
-    return peakbin;
-}
-function getParabolicApproximateBin(spectrum)
-{
-    // 1. Find first peak bin
-    let peakbin = getPeakBin(spectrum);
-
-    // 2. Create letter vars corresponding to alpha, beta, gamma
-    let a = spectrum[peakbin-1];
-    let b = spectrum[peakbin];
-    let c = spectrum[peakbin+1];
-
-    // 3. Use equation to find interpolated bin value
-    let interpolatedbin = 0.5 * ((a - c) / (a - 2 * b + c)) + peakbin;
-
-    return interpolatedbin;
-}
-function getParabolicApproximateFrequency(spectrum)
-{
-    // Use parabolic interpolation
-    // https://ccrma.stanford.edu/~jos/sasp/Quadratic_Interpolation_Spectral_Peaks.html    
-
-    // 1. Get peak approximation bin
-    let interpolatedbin = getParabolicApproximateBin(spectrum, getParabolicApproximateBin(spectrum));
-
-    // 2. Return peak magnitude estimate
-    // return (b - 0.25 * (a - c) * interpolatedbin) / spectrum.length * sampleRate;
-
-    // Real 2. Return bin in terms of freq
-    return interpolatedbin / (spectrum.length) * sampleRate;
-}
+import
+{ 
+    getMaxPeakBin, 
+    getParabolicApproximatePeakBin,
+    getParabolicApproximateFrequency, 
+    getParabolicApproximatePower
+} from "./helpers.js";
 
 class WorkletAnalyzer extends AudioWorkletProcessor
 {
@@ -59,13 +24,6 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         this.internalBufferOffset = 0;
         this.sinceLastProcess = 0;
 
-        // Store sample rate, buffer size, etc
-        for (let i = 0; i < parameters.processorOptions.length; i++)
-        {
-            let key = Object.keys(parameters.processorOptions[i])[0];
-            this[key] = parameters.processorOptions[i]; 
-        }
-
         // Create buffers
         this.internalBuffer = new Float32Array(this.internalBufferSize);
         this.fftBuffer = new Float32Array(2*this.fftSize); // real and imaginary
@@ -74,6 +32,14 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         // For HPS
         this.HPSmagnitudeBuffer = new Float32Array(this.fftSize);
         this.HPScorrelationBuffer = new Float32Array(this.fftSize);
+        this.HPSharmonicCount = 2;
+
+        // Store sample rate, buffer size, etc
+        for (let i = 0; i < parameters.processorOptions.length; i++)
+        {
+            let key = Object.keys(parameters.processorOptions[i])[0];
+            this[key] = parameters.processorOptions[i]; 
+        }
 
         // Fill em
         for (let i = 0; i < this.fftSize; i++)
@@ -178,39 +144,68 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         this.fft();
 
         // Collect Magnitudes
-        for (let i = 0; i < this.fftSize / 2; i++)
+        let HPSsize = this.fftSize / 2;
+        for (let i = 0; i < HPSsize; i++)
         {
-            this.HPSmagnitudeBuffer[i] = Math.sqrt(Math.pow(this.fftBuffer[i], 2) + Math.pow(this.fftBuffer[i + this.fftSize], 2));
-
-            // Also, for HPS presave  first iteration
-            this.HPScorrelationBuffer[i] = this.HPSmagnitudeBuffer[i] + 1;
+            this.HPSmagnitudeBuffer[i] = Math.sqrt(Math.pow(this.fftBuffer[i], 2) + Math.pow(this.fftBuffer[i + this.fftSize], 2)) + 0.1;
         }
 
         // Perform Analysis
-        for (let w = 0; w < this.fftSize / 2; w++)
+        // Set our HPS resolution to be fftSize / 2
+        // from 50 to 1000 Hz
+        let start = 50, end = 1000;
+        for (let i = 0; i < HPSsize; i++)
         {
+            // Our selected sampling frequencies from 50 - 1000 Hz
+            let w = (start + i * (end - start) / HPSsize);
+
             // For each frequency downscale n times (say 5)
-            const n = 3;
-            let tau = this.HPSmagnitudeBuffer[w];
-            for (let scalefactor = 1; scalefactor < n && w * Math.pow(2, n) < this.fftSize / 2; scalefactor++)
+            const n = this.HPSharmonicCount;
+            let tau = 1;
+            for (let scalefactor = 1; scalefactor <= n && Math.pow(2, scalefactor) < HPSsize; scalefactor++)
             {
-
-                tau *= this.HPSmagnitudeBuffer[w * scalefactor];
+                tau *= getParabolicApproximatePower(this.HPSmagnitudeBuffer, this.sampleRate, w * scalefactor);
             }
-
-            this.HPScorrelationBuffer[w] = tau;
+            
+            this.HPScorrelationBuffer[i] = tau;
         }
 
         // Normalize first half
         let max = Math.max(...this.HPScorrelationBuffer);
-        for (let w = 0; w < this.fftSize / 2; w++)
+        for (let w = 0; w < HPSsize; w++)
         {
             this.HPScorrelationBuffer[w] /= max;
-            this.HPScorrelationBuffer[w + this.fftSize / 2] = 0;
+            this.HPScorrelationBuffer[w + HPSsize] = 0;
         }
 
-        // log max        
-        this.port.postMessage(this.HPScorrelationBuffer);
+        // Get a polynomic interpolated value of peak bin
+        let peakbin = getParabolicApproximatePeakBin(this.HPScorrelationBuffer); 
+
+        // Convert to Hz
+        let pitch = peakbin / HPSsize * (end - start) + start;
+
+        // Gather a confidence value
+        let confidence = 0;
+        // Based on expected window width
+        // above threshold after normalization
+        const width = 40;
+        const thresh = 0.1
+        let numbinsoverthresh = 0;
+        for (let i = 0; i < HPSsize; i++)
+        {
+            if (this.HPScorrelationBuffer[i] > thresh)
+            {
+                numbinsoverthresh++;
+            }
+        }
+        confidence = 1 - (numbinsoverthresh - width) / (HPSsize - width);
+        confidence = Math.max(0, Math.min(1, confidence));
+
+        // Report findings        
+        this.port.postMessage({
+            spectrum: this.HPScorrelationBuffer, 
+            pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
+        });
 
     }
     
