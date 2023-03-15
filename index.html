@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    <br><br><br>
+    <button id="start">Start Mic Input</button>
+    <br><br>
+    <button id="toggle">Enable</button>
+    <br><br>
+    <input id="freq" type="range" max="440" min="50" oninput="modifyFreq()">
+    <br><br>
+    <div id="detected"></div>
+    <br><br>
+    <div id="spectrum"></div>
+</body>
+</html>
+
+<script type="module">
+
+    window.doc = document;
+
+    import PitchController from "./PitchController/pitchcontroller.js";
+
+    const fftSize = 512;
+    const sampleRate = 44100;
+
+    const controller = new PitchController({fftSize:fftSize, sampleRate:sampleRate});
+
+    toggle.addEventListener("click", e=>{
+
+        controller.toggle();
+
+        if (toggle.innerText == "Enable")
+        {
+            toggle.innerText = "Disable";
+        }
+        else
+        {
+            toggle.innerText = "Enable";
+        }
+    })
+
+    start.addEventListener("click", e=>{
+
+        controller.initialize();
+    })
+
+    let spectrum = document.getElementById("spectrum");
+    spectrum.style.display = "flex"
+    spectrum.style.alignItems = "end"
+
+    spectrum.innerHTML = "";
+
+    for (let i = 0; i < fftSize / 2; i++)
+    {
+        let div = document.createElement("div");
+        div.style.width = "5px";
+        div.style.height = "5px";
+        div.style.backgroundColor = "black";
+
+        spectrum.appendChild(div);
+    }
+
+
+</script>
