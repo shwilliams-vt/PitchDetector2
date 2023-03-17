@@ -161,7 +161,8 @@ export default class PitchController
             processorOptions:{
                 sampleRate:audioContext.sampleRate,
                 frameSize:this.frameSize,
-                mode:"ACF"}
+                mode:"ACF",
+                smoothness:10}
         });
         bandpass.connect(analyzer);
 

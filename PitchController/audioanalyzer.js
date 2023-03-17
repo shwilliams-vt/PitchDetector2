@@ -13,6 +13,15 @@ import
 
 import FFTHelper from "./ffthelper.js";
 
+class Report
+{
+    constructor(parameters)
+    {
+        this.pitch = parameters.pitch;
+        this.confidence = parameters.confidence;
+    }
+}
+
 class WorkletAnalyzer extends AudioWorkletProcessor
 {
     constructor(parameters)
@@ -27,11 +36,12 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         this.processingRate = 256; // In samples
         this.internalBufferOffset = 0;
         this.sinceLastProcess = 0;
+        this.smoothness = 0;
 
         this.enabled = true;
 
         // For HPS
-        this.HPSharmonicCount = 2;
+        this.HPSharmonicCount = 4;
 
         // For ACF
         this.ACFthreshold = 0.3;
@@ -74,7 +84,14 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         this.ffthelper = new FFTHelper({
             sampleRate: this.sampleRate,
             fftSize: this.frameSize
-        })
+        });
+
+        // Store last pitches
+        this.lastreports = [];
+        for (let i = 0; i < this.smoothness; i++)
+        {
+            this.lastreports[i] = new Report({pitch:0, confidence:0});
+        }
 
         // Fill buffers
         for (let i = 0; i < this.frameSize; i++)
@@ -227,19 +244,6 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         }
         confidence = 1 - (numbinsoverthresh - width) / (HPSsize - width);
 
-        // If pitch is NaN confidence is 0
-        if (isNaN(pitch))
-        {
-            confidence = 0;
-        }
-
-        if (isNaN(confidence))
-        {
-            confidence = 0;
-        }
-
-        confidence = Math.max(0, Math.min(1, confidence));
-
         // Report findings        
         this.postProcess({
             spectrum: this.HPScorrelationBuffer, 
@@ -294,6 +298,11 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         let firstpeakbin = getNthParabolicApproximatePeakBin(this.ACFpeaksBuffer, 1);
         let pitch = this.sampleRate / firstpeakbin - 4;
 
+        if (pitch < 0)
+        {
+            pitch = 0;
+        }
+
         // Gather a confidence value
         let confidence = 0;
 
@@ -324,20 +333,6 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         confidence = 1 - (confidence / (2 * numbands));
         confidence = confidence * 10 - 9;
 
-        // If pitch is NaN confidence is 0
-        if (isNaN(pitch))
-        {
-            confidence = 0;
-        }
-
-        if (isNaN(confidence))
-        {
-            confidence = 0;
-        }
-
-        confidence = Math.max(0, Math.min(1, confidence));
-
-
         // Report findings        
         this.postProcess({
             spectrum: this.ACFpeaksBuffer.slice(0,this.frameSize/2), 
@@ -348,6 +343,42 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
     postProcess(report)
     {
+
+        // Do some handling
+        // If pitch is NaN confidence is 0
+        if (isNaN(report.pitchInfo.pitch))
+        {
+            report.pitchInfo.confidence = 0;
+        }
+
+        if (isNaN(report.pitchInfo.confidence))
+        {
+            report.pitchInfo.confidence = 0;
+        }
+
+        report.pitchInfo.confidence = Math.max(0, Math.min(1, report.pitchInfo.confidence));
+
+
+        // Apply smoothness
+        // Do this by averaging last n pitches
+        let smoothedPitch = report.pitchInfo.pitch;
+        let smoothedConfidence = report.pitchInfo.confidence;
+        for (let i = 0; i < this.lastreports.length; i++)
+        {
+            smoothedPitch += this.lastreports[i].pitch;
+            smoothedConfidence += this.lastreports[i].confidence;
+        }
+
+        smoothedPitch /= this.lastreports.length + 1;
+        smoothedConfidence /= this.lastreports.length + 1;
+
+        // Shift last reports
+        this.lastreports.shift();
+        this.lastreports.push(new Report({pitch:report.pitchInfo.pitch, confidence:report.pitchInfo.confidence}));
+
+        report.pitchInfo.pitch = smoothedPitch;
+        report.pitchInfo.confidence = smoothedConfidence;
+
         this.port.postMessage(report);
     }
 }
