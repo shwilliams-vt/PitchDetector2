@@ -241,7 +241,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         confidence = Math.max(0, Math.min(1, confidence));
 
         // Report findings        
-        this.port.postMessage({
+        this.postProcess({
             spectrum: this.HPScorrelationBuffer, 
             pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
         });
@@ -339,11 +339,16 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
 
         // Report findings        
-        this.port.postMessage({
+        this.postProcess({
             spectrum: this.ACFpeaksBuffer.slice(0,this.frameSize/2), 
             pitchInfo: {pitch: Math.round(pitch), confidence:confidence},
             peaks:numbands
         });
+    }
+
+    postProcess(report)
+    {
+        this.port.postMessage(report);
     }
 }
   
