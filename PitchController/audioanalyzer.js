@@ -9,6 +9,8 @@ import
     getParabolicApproximatePower
 } from "./helpers.js";
 
+import FFTHelper from "./ffthelper.js";
+
 class WorkletAnalyzer extends AudioWorkletProcessor
 {
     constructor(parameters)
@@ -26,8 +28,6 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
         // Create buffers
         this.internalBuffer = new Float32Array(this.internalBufferSize);
-        this.fftBuffer = new Float32Array(2*this.fftSize); // real and imaginary
-        this.window = new Float32Array(this.fftSize);
 
         // For HPS
         this.HPSmagnitudeBuffer = new Float32Array(this.fftSize);
@@ -41,15 +41,21 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             this[key] = parameters.processorOptions[i]; 
         }
 
-        // Fill em
+        this.initialize();
+
+    }
+
+    initialize()
+    {
+        /// Init vars
+        this.ffthelper = new FFTHelper({
+            sampleRate: this.sampleRate,
+            fftSize: this.fftSize
+        })
+
+        // Fill buffers
         for (let i = 0; i < this.fftSize; i++)
         {
-            this.fftBuffer[i] = 0;
-            this.fftBuffer[2*i] = 0;
-            // Hamming window
-            this.window[i] = 0.5 * (1 - Math.cos((i * 2 * Math.PI) / (this.fftSize - 1)));
-
-
             this.HPSmagnitudeBuffer[i] = 0;
             this.HPScorrelationBuffer[i] = 0;
         }
@@ -58,7 +64,6 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         {
             this.internalBuffer[i] = 0;
         }
-
     }
 
     process(inputs, outputs, parameters)
@@ -100,7 +105,6 @@ class WorkletAnalyzer extends AudioWorkletProcessor
                 this.beginprocessing();
                 this.sinceLastProcess = 0;
 
-                
                 // Move forward offset
                 this.internalBufferOffset = (oldInternalBufferOffset + i) % this.internalBufferSize;
             }
@@ -134,20 +138,17 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         {
             let j = (this.internalBufferSize + this.internalBufferOffset + i - this.fftSize) % this.internalBufferSize;
 
-            this.fftBuffer[i] = this.internalBuffer[j] * this.window[i]; // real
-            this.fftBuffer[i + this.fftSize] = 0; // imaginary
-
+            this.ffthelper.fftBuffer[i] = this.internalBuffer[j];
         }
 
-
         // Perform FFT
-        this.fft();
+        this.ffthelper.fft();
 
         // Collect Magnitudes
         let HPSsize = this.fftSize / 2;
         for (let i = 0; i < HPSsize; i++)
         {
-            this.HPSmagnitudeBuffer[i] = Math.sqrt(Math.pow(this.fftBuffer[i], 2) + Math.pow(this.fftBuffer[i + this.fftSize], 2)) + 0.1;
+            this.HPSmagnitudeBuffer[i] = this.ffthelper.magnitude(i) + 0.1;
         }
 
         // Perform Analysis

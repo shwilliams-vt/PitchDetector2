@@ -114,7 +114,7 @@ export default class PitchController
         bandpass.type = 'lowpass';
         bandpass.frequency.value = 2000;
 
-        if (false)
+        if (true)
         {
             let slider = document.getElementById("freq");
 
