@@ -15,10 +15,72 @@ export function getMaxPeakBin(spectrum)
     }
     return peakbin;
 }
-export function getParabolicApproximatePeakBin(spectrum)
+export function getNthPeakBin(spectrum, n)
+{
+    let peakbin = -1;
+    let max = -1;
+    let numpeaks = 0;
+    for (let i = 1; i < spectrum.length / 2; i++)
+    {
+        if (spectrum[i-1] < spectrum[i] && spectrum[i+1] < spectrum[i])
+        {
+            if (spectrum[i] > max)
+            {
+                max = spectrum[i];
+                peakbin = i;
+
+                numpeaks++;
+                if (numpeaks == n)
+                {
+                    break;
+                }
+            }
+        }
+    }
+    return peakbin;
+}
+export function getMaxParabolicApproximatePeakBin(spectrum)
 {
     // 1. Find max peak bin
     let peakbin = getMaxPeakBin(spectrum);
+
+    // 1.5 check bounds
+    if (peakbin <= 0)
+    {
+        peakbin = 1;
+    }
+    else if (peakbin >= spectrum.length - 1)
+    {
+        peakbin = spectrum.length - 2;
+    }
+
+    // 2. Create letter vars corresponding to alpha, beta, gamma
+    let a = spectrum[peakbin-1];
+    let b = spectrum[peakbin];
+    let c = spectrum[peakbin+1];
+
+    // 3. Slope
+    let m = 0.5 * (a - 2 * b + c);
+
+    // 3. Use equation to find interpolated bin value
+    let interpolatedbin = 0.25 * ((a - c) / m) + peakbin;
+
+    return interpolatedbin;
+}
+export function getNthParabolicApproximatePeakBin(spectrum, n)
+{
+    // 1. Find max peak bin
+    let peakbin = getNthPeakBin(spectrum, n);
+
+    // 1.5 check bounds
+    if (peakbin <= 0)
+    {
+        peakbin = 1;
+    }
+    else if (peakbin >= spectrum.length - 1)
+    {
+        peakbin = spectrum.length - 2;
+    }
 
     // 2. Create letter vars corresponding to alpha, beta, gamma
     let a = spectrum[peakbin-1];

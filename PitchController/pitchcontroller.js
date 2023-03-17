@@ -54,9 +54,9 @@ export default class PitchController
         {
             this.sampleRate = parameters.sampleRate;
         }
-        if (parameters.fftSize)
+        if (parameters.frameSize)
         {
-            this.fftSize = parameters.fftSize;
+            this.frameSize = parameters.frameSize;
         }
 
         // Get the Pitch Controller Directory
@@ -114,7 +114,7 @@ export default class PitchController
         bandpass.type = 'lowpass';
         bandpass.frequency.value = 2000;
 
-        if (true)
+        if (false)
         {
             let slider = document.getElementById("freq");
 
@@ -153,7 +153,9 @@ export default class PitchController
 
         // Connect input to an analyser
         await audioContext.audioWorklet.addModule(this.analyzerPath);
-        const analyzer = new AudioWorkletNode(audioContext, "worklet-analyzer", {processorOptions:{sampleRate:audioContext.sampleRate}});
+        const analyzer = new AudioWorkletNode(audioContext, "worklet-analyzer", {
+            processorOptions:{sampleRate:audioContext.sampleRate, frameSize:this.frameSize, mode:"ACF"}
+        });
         bandpass.connect(analyzer);
 
         // Connect analyzer to destination
@@ -174,7 +176,7 @@ export default class PitchController
             {
                 let spectrum = document.getElementById("spectrum");
     
-                for (let i = 0; i < scope.fftSize/2; i++)
+                for (let i = 0; i < scope.frameSize/2; i++)
                 {
                     spectrum.children[i].style.height = (50*e.data.spectrum[i]) + "px";
                 } 
@@ -182,6 +184,10 @@ export default class PitchController
             if (e.data.pitchInfo)
             {
                 detected.innerHTML = "Actual: " + slider.value + ", Detected: " + (e.data.pitchInfo.pitch) + "<br>Confidence: " + e.data.pitchInfo.confidence;
+            }
+            if (e.data.peaks)
+            {
+                detected.innerHTML += "<br>Peaks: " + e.data.peaks.slice(0,20);
             }
         }
 

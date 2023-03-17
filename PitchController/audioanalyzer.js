@@ -4,7 +4,9 @@ const HPS = "HPS";
 import
 { 
     getMaxPeakBin, 
-    getParabolicApproximatePeakBin,
+    getNthPeakBin,
+    getMaxParabolicApproximatePeakBin,
+    getNthParabolicApproximatePeakBin,
     getParabolicApproximateFrequency, 
     getParabolicApproximatePower
 } from "./helpers.js";
@@ -20,25 +22,23 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
         this.sampleRate = 44100;
         this.internalBufferSize = 16384;
-        this.fftSize = 512;
+        this.frameSize = 512;
         this.mode = HPS;
         this.processingRate = 256; // In samples
         this.internalBufferOffset = 0;
         this.sinceLastProcess = 0;
 
-        // Create buffers
-        this.internalBuffer = new Float32Array(this.internalBufferSize);
-
         // For HPS
-        this.HPSmagnitudeBuffer = new Float32Array(this.fftSize);
-        this.HPScorrelationBuffer = new Float32Array(this.fftSize);
         this.HPSharmonicCount = 2;
 
+        // For ACF
+        this.ACFthreshold = 0.3;
+
         // Store sample rate, buffer size, etc
-        for (let i = 0; i < parameters.processorOptions.length; i++)
+        for (let i = 0; i < Object.keys(parameters.processorOptions).length; i++)
         {
-            let key = Object.keys(parameters.processorOptions[i])[0];
-            this[key] = parameters.processorOptions[i]; 
+            let key = Object.keys(parameters.processorOptions)[i];
+            this[key] = parameters.processorOptions[key]; 
         }
 
         this.initialize();
@@ -48,16 +48,31 @@ class WorkletAnalyzer extends AudioWorkletProcessor
     initialize()
     {
         /// Init vars
+
+        // Create buffers
+        this.internalBuffer = new Float32Array(this.internalBufferSize);
+
+        // For HPS
+        this.HPSmagnitudeBuffer = new Float32Array(this.frameSize);
+        this.HPScorrelationBuffer = new Float32Array(this.frameSize);
+
+        // For ACF
+        this.ACFbuffer = new Float32Array(this.frameSize);
+        this.ACFpeaksBuffer = new Float32Array(this.frameSize);
+
         this.ffthelper = new FFTHelper({
             sampleRate: this.sampleRate,
-            fftSize: this.fftSize
+            fftSize: this.frameSize
         })
 
         // Fill buffers
-        for (let i = 0; i < this.fftSize; i++)
+        for (let i = 0; i < this.frameSize; i++)
         {
             this.HPSmagnitudeBuffer[i] = 0;
             this.HPScorrelationBuffer[i] = 0;
+
+            this.ACFbuffer[i] = 0;
+            this.ACFpeaksBuffer[i] = 0;
         }
 
         for (let i = 0; i < this.internalBufferSize; i++)
@@ -134,9 +149,9 @@ class WorkletAnalyzer extends AudioWorkletProcessor
     processHPS()
     {
         // For HPS, collect samples up to offset, window them, then fft
-        for (let i = 0; i < this.fftSize; i++)
+        for (let i = 0; i < this.frameSize; i++)
         {
-            let j = (this.internalBufferSize + this.internalBufferOffset + i - this.fftSize) % this.internalBufferSize;
+            let j = (this.internalBufferSize + this.internalBufferOffset + i - this.frameSize) % this.internalBufferSize;
 
             this.ffthelper.fftBuffer[i] = this.internalBuffer[j];
         }
@@ -145,14 +160,14 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         this.ffthelper.fft();
 
         // Collect Magnitudes
-        let HPSsize = this.fftSize / 2;
+        let HPSsize = this.frameSize / 2;
         for (let i = 0; i < HPSsize; i++)
         {
             this.HPSmagnitudeBuffer[i] = this.ffthelper.magnitude(i) + 0.1;
         }
 
         // Perform Analysis
-        // Set our HPS resolution to be fftSize / 2
+        // Set our HPS resolution to be frameSize / 2
         // from 50 to 1000 Hz
         let start = 50, end = 1000;
         for (let i = 0; i < HPSsize; i++)
@@ -180,7 +195,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         }
 
         // Get a polynomic interpolated value of peak bin
-        let peakbin = getParabolicApproximatePeakBin(this.HPScorrelationBuffer); 
+        let peakbin = getMaxParabolicApproximatePeakBin(this.HPScorrelationBuffer); 
 
         // Convert to Hz
         let pitch = peakbin / HPSsize * (end - start) + start;
@@ -212,88 +227,70 @@ class WorkletAnalyzer extends AudioWorkletProcessor
     
     processACF()
     {
-
-    }
-
-    fft()
-    {
-
-        // 1. Bit flip
-        let logSize = Math.log2(this.fftSize);
-
-        for (let i = 0; i < this.fftSize; i++)
+        // For ACF, collect samples up to offset, window them
+        for (let i = 0; i < this.frameSize; i++)
         {
-            let reversed = 0;
-            for (let j = 0; j < logSize; j++) {
-                reversed |= !!((1 << j) & i) << (logSize - j - 1);
+            let j = (this.internalBufferSize + this.internalBufferOffset + i - this.frameSize) % this.internalBufferSize;
+
+            this.ACFbuffer[i] = this.internalBuffer[j] * this.ffthelper.hannwindow(i, this.frameSize);
+            this.ACFpeaksBuffer[i] = 0;
+        }
+
+        // Easy function: 
+        for (let lag = 0; lag < this.frameSize; lag++)
+        {
+            for (let i = 0; i < this.frameSize; i++)
+            {
+                this.ACFpeaksBuffer[this.frameSize - 1 - lag] += this.ACFbuffer[i] * this.ACFbuffer[(this.frameSize + i - lag) % this.frameSize];
             }
+        }
+
+        // Remove noise
+        for (let i = 0; i < this.frameSize; i++)
+        {
+            if (this.ACFpeaksBuffer[i] < this.ACFthreshold)
+            {
+                this.ACFpeaksBuffer[i] = 0;
+            }
+        }
+
+        // Normalize peaks
+        let max = Math.max(...this.ACFpeaksBuffer);
+        if (max == 0)
+        {
+            max = 1;
+        }
+        for (let i = 0; i < this.frameSize; i++)
+        {
+            this.ACFpeaksBuffer[i] /= max;
+        }
+
+        // Now calculate avg distance between peaks
+
+        // Pitch is the sample rate divided by the period (in bins)
+        let firstpeakbin = getNthParabolicApproximatePeakBin(this.ACFpeaksBuffer, 1);
+        let pitch = this.sampleRate / firstpeakbin - 4;
+
+        // Gather a confidence value
+        let confidence = 0;
+
+        // Basically check for harmonics
+        for (let i = 0; i < this.frameSize; i++)
+        {
             
-            if (reversed >= i) {
-
-                let tmp = this.fftBuffer[i];
-                this.fftBuffer[i] = this.fftBuffer[reversed];
-                this.fftBuffer[reversed] = tmp;
-
-                tmp = this.fftBuffer[i + this.fftSize];
-                this.fftBuffer[i + this.fftSize] = this.fftBuffer[reversed + this.fftSize];
-                this.fftBuffer[reversed + this.fftSize] = tmp;
-            }
         }
 
-        // 2. FFT
-
-        // Radix 2
-        const TWOPI = 2 * Math.PI;
-
-        // Log2 size stages (see diagram for how many butterfly stages there are)
-        for (let stage = 1; stage <= logSize; stage++) {
-
-            // distance between the start of each butterfly chain
-            let butterflySeperation = Math.pow(2,stage);
-
-            // distance between lo and hi elements in butterfly
-            let butterflyWidth = butterflySeperation / 2; 
-
-            // For each butterfly separation
-            for (let j = 0; j < this.fftSize; j += butterflySeperation) {
-
-                // Perform synthesis on offset (i-j) and offset + width (hi and lo) for each butterfly chain
-                for (let i = j; i < j + butterflyWidth; i++) {
-
-
-                    // get frequency, set coefficient
-                    // Note that sampling size is the butterfly seperation
-                    let f = (i-j) / butterflySeperation;
-                    let a = TWOPI * f;
-
-                    // Indices for hi and low values (low is actually further up)
-                    let idxHi = i;
-                    let idxLo = idxHi + butterflyWidth;
-
-                    
-
-                    // Get all time values, real and imaginary
-                    let gtkrHi = this.fftBuffer[idxHi];
-                    let gtkiHi = this.fftBuffer[idxHi + this.fftSize];
-                    let gtkrLo = this.fftBuffer[idxLo];
-                    let gtkiLo = this.fftBuffer[idxLo + this.fftSize];
-
-                    // Recall the below is the exact same as adding all vals from DFT
-                    let ValRLo = gtkrLo * Math.cos(a) - gtkiLo * Math.sin(a);
-                    let ValILo = gtkrLo * Math.sin(a) + gtkiLo * Math.cos(a);
-                    // Nature of the Radix 2 algorithm means the hi val is equal to itself (see diagram)
-                    let ValRHi = gtkrHi;
-                    let ValIHi = gtkiHi;
-
-                    // Now add the lo to the high and TODO
-                    this.fftBuffer[idxHi] = ValRLo + ValRHi;
-                    this.fftBuffer[idxHi + this.fftSize] = ValILo + ValIHi;
-                    this.fftBuffer[idxLo] = ValRHi - ValRLo;
-                    this.fftBuffer[idxLo + this.fftSize] = ValIHi - ValILo;
-
-                }
-            }
+        // If pitch is NaN confidence is 0
+        if (isNaN(pitch))
+        {
+            confidence = 0;
         }
+
+        // Report findings        
+        this.port.postMessage({
+            spectrum: this.ACFpeaksBuffer.slice(0,this.frameSize/2), 
+            pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
+        });
     }
 }
   
