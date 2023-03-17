@@ -187,7 +187,7 @@ export default class PitchController
             }
             if (e.data.peaks)
             {
-                detected.innerHTML += "<br>Peaks: " + e.data.peaks.slice(0,20);
+                detected.innerHTML += "<br>Peaks: " + e.data.peaks;
             }
         }
 

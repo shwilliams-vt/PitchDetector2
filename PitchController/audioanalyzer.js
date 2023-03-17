@@ -215,6 +215,18 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             }
         }
         confidence = 1 - (numbinsoverthresh - width) / (HPSsize - width);
+
+        // If pitch is NaN confidence is 0
+        if (isNaN(pitch))
+        {
+            confidence = 0;
+        }
+
+        if (isNaN(confidence))
+        {
+            confidence = 0;
+        }
+
         confidence = Math.max(0, Math.min(1, confidence));
 
         // Report findings        
@@ -274,11 +286,32 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         // Gather a confidence value
         let confidence = 0;
 
-        // Basically check for harmonics
-        for (let i = 0; i < this.frameSize; i++)
+        // Basically check band width
+        const idealbandwidth = 15;
+        let firstactualpeakbin = getNthPeakBin(this.ACFpeaksBuffer, 1);
+        let first0band = firstactualpeakbin;
+        let last0band = firstactualpeakbin;
+        while (first0band > -1 && this.ACFpeaksBuffer[first0band] > 0)
         {
-            
+            first0band--;
         }
+        while (last0band < this.frameSize && this.ACFpeaksBuffer[last0band] > 0)
+        {
+            last0band++;
+        }
+
+        let numbands = (last0band - first0band);
+
+        // Now we go through and assign difference to confindence
+        for (let i = 0; i < numbands / 2; i++)
+        {
+            confidence += Math.abs(this.ACFpeaksBuffer[last0band] - this.ACFpeaksBuffer[first0band]);
+            last0band--;
+            first0band++;
+        }
+
+        confidence = 1 - (confidence / (2 * numbands));
+        confidence = confidence * 10 - 9;
 
         // If pitch is NaN confidence is 0
         if (isNaN(pitch))
@@ -286,10 +319,19 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             confidence = 0;
         }
 
+        if (isNaN(confidence))
+        {
+            confidence = 0;
+        }
+
+        confidence = Math.max(0, Math.min(1, confidence));
+
+
         // Report findings        
         this.port.postMessage({
             spectrum: this.ACFpeaksBuffer.slice(0,this.frameSize/2), 
-            pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
+            pitchInfo: {pitch: Math.round(pitch), confidence:confidence},
+            peaks:numbands
         });
     }
 }
