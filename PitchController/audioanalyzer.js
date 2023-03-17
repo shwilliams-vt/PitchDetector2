@@ -49,7 +49,6 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             if ("enabled" in e.data)
             {
                 this.enabled = e.data.enabled;
-                console.log(this.enabled)
             }
         }
 
