@@ -58,6 +58,10 @@ export default class PitchController
         {
             this.frameSize = parameters.frameSize;
         }
+        if (parameters.afterprocessing)
+        {
+            this.afterprocessing = parameters.afterprocessing;
+        }
 
         // Get the Pitch Controller Directory
         var currentDirectory = parseCurrentDirectory();
@@ -154,7 +158,10 @@ export default class PitchController
         // Connect input to an analyser
         await audioContext.audioWorklet.addModule(this.analyzerPath);
         const analyzer = new AudioWorkletNode(audioContext, "worklet-analyzer", {
-            processorOptions:{sampleRate:audioContext.sampleRate, frameSize:this.frameSize, mode:"ACF"}
+            processorOptions:{
+                sampleRate:audioContext.sampleRate,
+                frameSize:this.frameSize,
+                mode:"ACF"}
         });
         bandpass.connect(analyzer);
 
@@ -169,35 +176,39 @@ export default class PitchController
         let scope = this;
         analyzer.port.onmessage = e =>{
 
-            let detected = document.getElementById("detected");
-            let slider = document.getElementById("freq");
-
-            if (e.data.spectrum)
-            {
-                let spectrum = document.getElementById("spectrum");
-    
-                for (let i = 0; i < scope.frameSize/2; i++)
-                {
-                    spectrum.children[i].style.height = (50*e.data.spectrum[i]) + "px";
-                } 
-            }
-            if (e.data.pitchInfo)
-            {
-                detected.innerHTML = "Actual: " + slider.value + ", Detected: " + (e.data.pitchInfo.pitch) + "<br>Confidence: " + e.data.pitchInfo.confidence;
-            }
-            if (e.data.peaks)
-            {
-                detected.innerHTML += "<br>Peaks: " + e.data.peaks;
-            }
+            scope._callback(e);
         }
 
+        // Set initial enabled state in analyzer
+        analyzer.port.postMessage({enabled:this.inrunningstate()});
 
         // Initialized
+        this.analyzer = analyzer;
         this.initialized = true;
     }
 
-    toggle()
+    toggle(val)
     {
-        this.userenabled = !this.userenabled;
+        if (val === undefined)
+        {
+            val = !this.userenabled;
+        }
+
+        this.userenabled = val;
+
+        this.analyzer.port.postMessage({enabled:this.inrunningstate()})
+    }
+
+    _callback(e)
+    {
+        if (this.afterprocessing)
+        {
+            this.afterprocessing(e);
+        }
+    }
+
+    setAfterProcessingCallback(callback)
+    {
+        this.afterprocessing = callback;
     }
 }

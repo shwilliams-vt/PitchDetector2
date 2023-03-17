@@ -28,6 +28,8 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         this.internalBufferOffset = 0;
         this.sinceLastProcess = 0;
 
+        this.enabled = true;
+
         // For HPS
         this.HPSharmonicCount = 2;
 
@@ -39,6 +41,16 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         {
             let key = Object.keys(parameters.processorOptions)[i];
             this[key] = parameters.processorOptions[key]; 
+        }
+
+        // Set message settings
+        this.port.onmessage = e => {
+
+            if ("enabled" in e.data)
+            {
+                this.enabled = e.data.enabled;
+                console.log(this.enabled)
+            }
         }
 
         this.initialize();
@@ -98,9 +110,9 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             }
         }
 
-        if (inputs.length == 0)
+        if (inputs.length == 0 || !this.enabled)
         {
-            return;
+            return true;
         }
 
         // Only use first channel

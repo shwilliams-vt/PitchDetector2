@@ -30,7 +30,34 @@
     const frameSize = 512;
     const sampleRate = 44100;
 
-    const controller = new PitchController({frameSize:frameSize, sampleRate:sampleRate});
+    const afterprocessing = function(e)
+    {
+        let detected = document.getElementById("detected");
+        let slider = document.getElementById("freq");
+
+        if (e.data.spectrum)
+        {
+            let spectrum = document.getElementById("spectrum");
+
+            for (let i = 0; i < frameSize/2; i++)
+            {
+                spectrum.children[i].style.height = (50*e.data.spectrum[i]) + "px";
+            } 
+        }
+        if (e.data.pitchInfo)
+        {
+            detected.innerHTML = "Actual: " + slider.value + ", Detected: " + (e.data.pitchInfo.pitch) + "<br>Confidence: " + e.data.pitchInfo.confidence;
+        }
+        if (e.data.peaks)
+        {
+            detected.innerHTML += "<br>Peaks: " + e.data.peaks;
+        }
+    }
+
+    const controller = new PitchController({
+        frameSize:frameSize,
+        sampleRate:sampleRate,
+        afterprocessing:afterprocessing });
 
     toggle.addEventListener("click", e=>{
 
