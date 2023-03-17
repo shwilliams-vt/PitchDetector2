@@ -27,7 +27,7 @@
 
     import PitchController from "./PitchController/pitchcontroller.js";
 
-    const frameSize = 512;
+    const frameSize = 1024;
     const sampleRate = 44100;
 
     const afterprocessing = function(e)
@@ -57,7 +57,9 @@
     const controller = new PitchController({
         frameSize:frameSize,
         sampleRate:sampleRate,
-        afterprocessing:afterprocessing });
+        afterprocessing:afterprocessing,
+        processingMode:"ACF",
+        smoothness:10 });
 
     toggle.addEventListener("click", e=>{
 

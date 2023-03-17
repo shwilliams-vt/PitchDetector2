@@ -48,6 +48,8 @@ export default class PitchController
     {
         this.userenabled = false; // Must be turned on
         this.initialized = false; // Must be initialized
+        this.processingMode = "ACF";
+        this.smoothness = 0;
 
         // parameters
         if (parameters.sampleRate)
@@ -61,6 +63,14 @@ export default class PitchController
         if (parameters.afterprocessing)
         {
             this.afterprocessing = parameters.afterprocessing;
+        }
+        if (parameters.smoothness)
+        {
+            this.smoothness = parameters.smoothness;
+        }
+        if (parameters.processingMode)
+        {
+            this.processingMode = parameters.processingMode;
         }
 
         // Get the Pitch Controller Directory
@@ -161,8 +171,8 @@ export default class PitchController
             processorOptions:{
                 sampleRate:audioContext.sampleRate,
                 frameSize:this.frameSize,
-                mode:"ACF",
-                smoothness:10}
+                mode:this.processingMode,
+                smoothness:this.smoothness}
         });
         bandpass.connect(analyzer);
 

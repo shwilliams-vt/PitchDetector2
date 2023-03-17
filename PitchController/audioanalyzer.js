@@ -296,7 +296,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
         // Pitch is the sample rate divided by the period (in bins)
         let firstpeakbin = getNthParabolicApproximatePeakBin(this.ACFpeaksBuffer, 1);
-        let pitch = this.sampleRate / firstpeakbin - 4;
+        let pitch = this.sampleRate / (firstpeakbin + 1) ;
 
         if (pitch < 0)
         {
