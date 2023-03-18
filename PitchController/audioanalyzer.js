@@ -30,20 +30,33 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         super();
 
         this.sampleRate = 44100;
+        // Buffer size
         this.internalBufferSize = 16384;
+        // The frame size of input samples
         this.frameSize = 512;
+        // The processing mode/algorithm for pitch detection
         this.mode = HPS;
-        this.processingRate = 256; // In samples
+        // The rate in samples to process at
+        this.processingRate = 256; 
+        // Should initially start at 0
         this.internalBufferOffset = 0;
+        // Used for determining when to process
         this.sinceLastProcess = 0;
+        // Used for averaging previous pitches and confidences
         this.smoothness = 0;
+        // Used for precision of pitch (rounded to this decimal place)
+        this.precision = 0;
 
         this.enabled = true;
+        this.playback = true;
 
         // For HPS
+        // The number of harmonics to weigh for HPS
         this.HPSharmonicCount = 4;
 
         // For ACF
+        // The threshold to eliminate trash data after ACF peak
+        // detection, normalized {0, 1}
         this.ACFthreshold = 0.3;
 
         // Store sample rate, buffer size, etc
@@ -112,7 +125,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
     process(inputs, outputs, parameters)
     {
 
-        if (true)
+        if (this.playback)
         {
             for (let i = 0; i < inputs.length; i++)
             {
@@ -344,7 +357,11 @@ class WorkletAnalyzer extends AudioWorkletProcessor
     postProcess(report)
     {
 
-        // Do some handling
+        // Here we modify the report to include the smoothness and precision parameters
+        // Note that we don't want to mess with OG data to store in reports, i.e. averages
+        // Instead, we want to store the accurate pitch and confidence in a report and 
+        // send the adjusted report to user
+        
         // If pitch is NaN confidence is 0
         if (isNaN(report.pitchInfo.pitch))
         {
@@ -371,6 +388,22 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
         smoothedPitch /= this.lastreports.length + 1;
         smoothedConfidence /= this.lastreports.length + 1;
+
+        // Apply precision (pitch only)
+        if (this.precision >= 0)
+        {
+            // If >= 0, is rounding decimal places (powers of 10)
+            const pow10 = Math.pow(10, this.precision);
+            smoothedPitch = Math.round(smoothedPitch * pow10) / pow10;
+        }
+        else
+        {
+            // Otherwise, divide range into 2 (hard to explain, see below)
+            const pow2 = Math.pow(2, -this.precision);
+            smoothedPitch = Math.round(smoothedPitch / pow2) * pow2;
+        }
+        
+    
 
         // Shift last reports
         this.lastreports.shift();

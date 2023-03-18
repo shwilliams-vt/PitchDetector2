@@ -50,6 +50,7 @@ export default class PitchController
         this.initialized = false; // Must be initialized
         this.processingMode = "ACF";
         this.smoothness = 0;
+        this.precision = 0;
 
         // parameters
         if (parameters.sampleRate)
@@ -71,6 +72,10 @@ export default class PitchController
         if (parameters.processingMode)
         {
             this.processingMode = parameters.processingMode;
+        }
+        if (parameters.precision)
+        {
+            this.precision = parameters.precision;
         }
 
         // Get the Pitch Controller Directory
@@ -128,7 +133,7 @@ export default class PitchController
         bandpass.type = 'lowpass';
         bandpass.frequency.value = 2000;
 
-        if (true)
+        if (false)
         {
             let slider = document.getElementById("freq");
 
@@ -172,7 +177,9 @@ export default class PitchController
                 sampleRate:audioContext.sampleRate,
                 frameSize:this.frameSize,
                 mode:this.processingMode,
-                smoothness:this.smoothness}
+                smoothness:this.smoothness,
+                precision: this.precision
+            }
         });
         bandpass.connect(analyzer);
 
