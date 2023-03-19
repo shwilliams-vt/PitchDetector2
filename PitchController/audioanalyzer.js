@@ -30,7 +30,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         super();
 
         this.sampleRate = 44100;
-        // Buffer size
+        // Buffer size (NOTE implicitly window size for detecting transients)
         this.internalBufferSize = 16384;
         // The frame size of input samples
         this.frameSize = 512;
@@ -46,8 +46,20 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         this.smoothness = 0;
         // Used for precision of pitch (rounded to this decimal place)
         this.precision = 0;
+        // The time to detect a transient (ms and samples)
+        this.transientTime = 30;
+        this.transientTimeInSamples = Math.ceil(this.transientTime / 1000 * this.internalBufferSize);
+        // Threshold (probability) for triggering a transient
+        this.transientThreshold = 0.8;
 
-        this.enabled = true;
+        this.userEnabled = true;
+        // When transient found, this is triggered
+        this.transientSilence = false;
+        // When transient is found, count is set to internal buffer size
+        this.transientWaitTimeInSamples = 0;
+        // Used to indicate if a potential transient has been identified
+        this.transientWaiting = false;
+        // Allows for audio playback
         this.playback = true;
 
         // For HPS
@@ -71,7 +83,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
             if ("enabled" in e.data)
             {
-                this.enabled = e.data.enabled;
+                this.userEnabled = e.data.enabled;
             }
         }
 
@@ -85,6 +97,13 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
         // Create buffers
         this.internalBuffer = new Float32Array(this.internalBufferSize);
+        this.transientBuffer = new Float32Array(this.internalBufferSize);
+
+        // Determine transient time in sampels
+        this.transientTimeInSamples = Math.ceil(this.transientTime / 1000 * this.internalBufferSize);
+        // Reset
+        this.transientWaitTimeInSamples = 0;
+        this.transientWaiting = false;
 
         // For HPS
         this.HPSmagnitudeBuffer = new Float32Array(this.frameSize);
@@ -119,6 +138,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         for (let i = 0; i < this.internalBufferSize; i++)
         {
             this.internalBuffer[i] = 0;
+            this.transientBuffer[i] = 0;
         }
     }
 
@@ -139,7 +159,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             }
         }
 
-        if (inputs.length == 0 || !this.enabled)
+        if (inputs.length == 0 || !this.userEnabled)
         {
             return true;
         }
@@ -175,6 +195,16 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
     beginprocessing()
     {
+
+        // 1. Detect transient
+        this.detectTransient();
+
+        // If we are in a silence, skip processing
+        if (this.transientSilence)
+        {
+            return;
+        }
+
         switch(this.mode)
         {
             case ACF:
@@ -185,6 +215,139 @@ class WorkletAnalyzer extends AudioWorkletProcessor
                 this.processHPS();
                 break;
         }
+    }
+
+    detectTransient()
+    {
+        // From https://ismir2011.ismir.net/papers/PS2-6.pdf
+        // What something looks like in two domains looks the same vice versa
+        // So since a sine wave would be a strong peak in frequency domain
+        // and a sine wave in time domain (obviously), a peak in the time domain
+        // Would look like a sine wave in the frequency domain
+
+        // ... TBD
+        
+        // OR just detect peaks in time domain by dividing into a few windows based on
+        // the n ms transient and find the probability that a transient is detected.
+
+        // To ensure it's really a transient, let the buffer flush and ensure that the
+        // probability remains the same (or higher) for the duration of the buffer.
+
+        // Normalize it
+
+        // Load transient buffer
+        for (let i = 0; i < this.internalBufferSize; i++)
+        {
+            this.transientBuffer[i] = this.internalBuffer[i];
+        }
+
+        // Find the max
+        const max = Math.max(...this.transientBuffer);
+        if (max != 0)
+        {
+            for (let i = 0; i < this.internalBufferSize; i++)
+            {
+                this.transientBuffer[i] /= max;
+            }
+        }
+
+        // Now break into transient size windows
+        let maxes = [];
+        let currentmax = -1;
+        for (let i = 0; i < this.internalBufferSize; i++)
+        {
+            // See if we have reached the end of a transient window
+            if ((i % this.transientTimeInSamples) + 1 == this.transientTimeInSamples || i == this.internalBufferSize - 1)
+            {
+                // Record maximum
+                maxes.push(currentmax);
+                currentmax = -1;
+            }
+
+            // Record max
+            currentmax = Math.max(currentmax, Math.abs(this.internalBuffer[i]));
+        }
+
+
+        // Normalize the maxes
+        let minmax = Math.min(...maxes);
+        let maxmax = Math.max(...maxes) - minmax;
+        let avgmax = 0;
+        if (minmax != 0 && maxmax != 0)
+        {
+            for (let i = 0; i < maxes.length; i++)
+            {
+                maxes[i] -= minmax;
+                maxes[i] /= maxmax;
+                avgmax += maxes[i];
+            }
+        }
+
+        if (maxes.length > 0)
+        {
+            avgmax /= maxes.length;
+        }
+        // Will screw up calculation
+        if (avgmax == 0)
+        {
+            avgmax = 1;
+        }
+
+        // Find "prob" a transient occurred 
+        let probabability = 1 - avgmax;
+        
+        if (probabability > this.transientThreshold)
+        {
+
+            if (!this.transientWaiting)
+            {
+                // Begin waiting
+                this.transientWaiting = true;
+                this.transientWaitTimeInSamples = this.internalBufferSize + this.processingRate;
+
+                return false;
+            }
+            else
+            {
+                // Wait
+                if (this.transientWaitTimeInSamples > 0)
+                {
+                    // Subtract elapsed samples
+                    this.transientWaitTimeInSamples -= this.processingRate;
+                    return false;
+                }
+                else
+                {
+                    // Reset wait time
+                    this.transientWaitTimeInSamples = 0;
+                    this.transientWaiting = false;
+                    // Change transient silence flag
+                    this.transientSilence = !this.transientSilence;
+                    // Trigger a transient
+                    this.ontransient();
+                    return true;
+                }
+            }
+        }
+        else
+        {
+            if (this.transientWaiting)
+            {
+                this.transientWaitTimeInSamples = 0;
+                this.transientWaiting = false;
+
+                return false;
+            }
+        }
+
+        // No transient detected
+        return false;
+        
+    }
+
+    ontransient()
+    {
+        this.port.postMessage({transientSilence:this.transientSilence});        
     }
 
     processHPS()

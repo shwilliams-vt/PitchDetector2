@@ -219,6 +219,11 @@ export default class PitchController
 
     _callback(e)
     {
+        // Check for silence
+        if ("transientSilence" in e.data)
+        {
+            console.log("transient, mode: " + e.data.transientSilence);
+        }
         if (this.afterprocessing)
         {
             this.afterprocessing(e);
