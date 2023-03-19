@@ -224,6 +224,13 @@ export default class PitchController
         {
             console.log("transient, mode: " + e.data.transientSilence);
         }
+        else if ("pitchInfo" in e.data)
+        {
+            // Set enabled 
+            e.data.valid = this.inrunningstate() && e.data.pitchInfo.pitch != NaN;
+        }
+
+        // Callback
         if (this.afterprocessing)
         {
             this.afterprocessing(e);

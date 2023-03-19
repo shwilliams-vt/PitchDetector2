@@ -565,8 +565,6 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             const pow2 = Math.pow(2, -this.precision);
             smoothedPitch = Math.round(smoothedPitch / pow2) * pow2;
         }
-        
-    
 
         // Shift last reports
         this.lastreports.shift();

@@ -17,7 +17,9 @@
     <br><br>
     <div id="detected"></div>
     <br><br>
-    <div id="spectrum"></div>
+    <div id="spectrum" style="min-height:50px"></div>
+    <br><br><br><br>
+    <div id="test" style="background-color:black;width:200px;height:100px;"></div>
 </body>
 </html>
 
@@ -30,10 +32,13 @@
     const frameSize = 1024;
     const sampleRate = 44100;
 
+    let controller = null;
+
     const afterprocessing = function(e)
     {
         let detected = document.getElementById("detected");
         let slider = document.getElementById("freq");
+        let block = document.getElementById("test");
 
         if (e.data.spectrum)
         {
@@ -52,9 +57,17 @@
         {
             detected.innerHTML += "<br>Peaks: " + e.data.peaks;
         }
+
+        if (e.data.pitchInfo && e.data.pitchInfo.confidence > 0.7)
+        {
+            let h = block.getBoundingClientRect().height;
+            h += e.data.pitchInfo.pitch / 1000;
+
+            block.style.height = h + "px";
+        }
     }
 
-    const controller = new PitchController({
+    controller = new PitchController({
         frameSize:frameSize,
         sampleRate:sampleRate,
         afterprocessing:afterprocessing,
