@@ -41,6 +41,29 @@ function getFrequencyFromSpectrum(spectrum, sampleRate)
     return interpolatedbin / (spectrum.length) * sampleRate;
 }
 
+class Session
+{
+    constructor(initialpitch)
+    {
+        // The initiale pitch (in Hz, all in Hz)
+        this.startingpitch = initialpitch;
+        // The current pitch offset
+        this.currentoffset = 0;
+        // The last pitch before current
+        this.lastpitch = initialpitch;
+        // The difference between the current pitch and the last pitch
+        this.deltapitch = 0;
+    }
+
+    update(newpitch)
+    {
+        this.currentoffset = newpitch - this.startingpitch;
+        this.deltapitch = newpitch - this.lastpitch;        
+        this.lastpitch = newpitch;
+    }
+                    
+}
+
 export default class PitchController
 {
 
@@ -48,34 +71,50 @@ export default class PitchController
     {
         this.userenabled = false; // Must be turned on
         this.initialized = false; // Must be initialized
+
+        // See audio analyzer for explanatinons on these
         this.processingMode = "ACF";
         this.smoothness = 0;
         this.precision = 0;
 
+        // Indicating a "session"
+        // Meaning a pitch has been detected
+        this.insession = false;
+
+        // The minimum confience level to be in a session
+        this.minconfidenceforsession = 0.7;
+
+        // Session variables 
+        this.session = null;
+
         // parameters
-        if (parameters.sampleRate)
+        if ("sampleRate" in parameters)
         {
             this.sampleRate = parameters.sampleRate;
         }
-        if (parameters.frameSize)
+        if ("frameSize" in parameters)
         {
             this.frameSize = parameters.frameSize;
         }
-        if (parameters.afterprocessing)
+        if ("afterprocessing" in parameters)
         {
             this.afterprocessing = parameters.afterprocessing;
         }
-        if (parameters.smoothness)
+        if ("smoothness" in parameters)
         {
             this.smoothness = parameters.smoothness;
         }
-        if (parameters.processingMode)
+        if ("processingMode" in parameters)
         {
             this.processingMode = parameters.processingMode;
         }
-        if (parameters.precision)
+        if ("precision" in parameters)
         {
             this.precision = parameters.precision;
+        }
+        if ("minconfidenceforsession" in parameters)
+        {
+            this.minconfidenceforsession = parameters.minconfidenceforsession;
         }
 
         // Get the Pitch Controller Directory
@@ -203,6 +242,8 @@ export default class PitchController
         // Initialized
         this.analyzer = analyzer;
         this.initialized = true;
+        this.insession = false;
+        this.session = null;
     }
 
     toggle(val)
@@ -219,16 +260,57 @@ export default class PitchController
 
     _callback(e)
     {
+        // In this function, we handle the callback to perform a variety of things
         // Check for silence
         if ("transientSilence" in e.data)
         {
-            console.log("transient, mode: " + e.data.transientSilence);
+            console.log("transient silence: " + e.data.transientSilence);
         }
         else if ("pitchInfo" in e.data)
         {
             // Set enabled 
-            e.data.valid = this.inrunningstate() && e.data.pitchInfo.pitch != NaN;
+            // e.data.insession = this.inrunningstate() && e.data.pitchInfo.pitch != NaN;
+            let isvalid = this.inrunningstate() && !isNaN(e.data.pitchInfo.pitch);
+
+            // Check confidence
+            if (isvalid && e.data.pitchInfo.confidence >= this.minconfidenceforsession)
+            {
+                if (!this.insession)
+                {
+                    // Not in session so make one, as confidence is adequate
+                    this.insession = true;
+
+                    // Create a session
+                    this.session = new Session(e.data.pitchInfo.pitch);
+
+                    console.log("Started session!");
+                }
+                else
+                {
+                    // Update our current session
+                    this.session.update(e.data.pitchInfo.pitch);
+                }
+                e.data.session = this.session;
+            }
+            else
+            {
+                if (this.insession)
+                {
+                    // We are in session and confidence is too low! Terminate it
+                    this.insession = false;
+
+                    // Delete session
+                    this.session = null;
+
+                    console.log("Ended session!");
+
+                }
+            }
+
         }
+
+        // Set final vals
+        e.data.insession = this.insession;
 
         // Callback
         if (this.afterprocessing)

@@ -58,10 +58,11 @@
             detected.innerHTML += "<br>Peaks: " + e.data.peaks;
         }
 
-        if (e.data.pitchInfo && e.data.pitchInfo.confidence > 0.7)
+        if (e.data.insession)
         {
+            let session = e.data.session;
             let h = block.getBoundingClientRect().height;
-            h += e.data.pitchInfo.pitch / 1000;
+            h += session.deltapitch;
 
             block.style.height = h + "px";
         }
@@ -73,7 +74,7 @@
         afterprocessing:afterprocessing,
         processingMode:"ACF",
         smoothness:40,
-        precision:-5
+        precision:0
      });
 
     toggle.addEventListener("click", e=>{
