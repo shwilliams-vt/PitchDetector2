@@ -40,7 +40,7 @@
         let slider = document.getElementById("freq");
         let block = document.getElementById("test");
 
-        if (e.data.spectrum)
+        if ("spectrum" in e.data)
         {
             let spectrum = document.getElementById("spectrum");
 
@@ -49,16 +49,16 @@
                 spectrum.children[i].style.height = (50*e.data.spectrum[i]) + "px";
             } 
         }
-        if (e.data.pitchInfo)
+        if ("pitchInfo" in e.data)
         {
             detected.innerHTML = "Actual: " + slider.value + ", Detected: " + (e.data.pitchInfo.pitch) + "<br>Confidence: " + e.data.pitchInfo.confidence;
         }
-        if (e.data.peaks)
+        if ("peaks" in e.data)
         {
             detected.innerHTML += "<br>Peaks: " + e.data.peaks;
         }
 
-        if (e.data.insession)
+        if ("insessione" in e.data && e.data.insession)
         {
             let session = e.data.session;
             let h = block.getBoundingClientRect().height;

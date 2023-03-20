@@ -104,6 +104,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         // Reset
         this.transientWaitTimeInSamples = 0;
         this.transientWaiting = false;
+        this.transientSilence = true;
 
         // For HPS
         this.HPSmagnitudeBuffer = new Float32Array(this.frameSize);
@@ -268,6 +269,11 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             currentmax = Math.max(currentmax, Math.abs(this.internalBuffer[i]));
         }
 
+        if (maxes.length == 0)
+        {
+            // Return false
+            return false;
+        }
 
         // Normalize the maxes
         let minmax = Math.min(...maxes);
@@ -283,10 +289,8 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             }
         }
 
-        if (maxes.length > 0)
-        {
-            avgmax /= maxes.length;
-        }
+        avgmax /= maxes.length;
+
         // Will screw up calculation
         if (avgmax == 0)
         {
@@ -537,7 +541,6 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         }
 
         report.pitchInfo.confidence = Math.max(0, Math.min(1, report.pitchInfo.confidence));
-
 
         // Apply smoothness
         // Do this by averaging last n pitches
