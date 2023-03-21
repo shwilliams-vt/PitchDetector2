@@ -49,6 +49,9 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         // The time to detect a transient (ms and samples)
         this.transientTime = 30;
         this.transientTimeInSamples = Math.ceil(this.transientTime / 1000 * this.internalBufferSize);
+        // The window length of time to detect a transient
+        this.transientWindowTime = 375.1; // ms
+        this.transientWindowTimeSamples = Math.ceil(this.transientWindowTime / 1000 * this.sampleRate);
         // Threshold (probability) for triggering a transient
         this.transientThreshold = 0.8;
 
@@ -101,6 +104,12 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
         // Determine transient time in sampels
         this.transientTimeInSamples = Math.ceil(this.transientTime / 1000 * this.internalBufferSize);
+        this.transientWindowTimeSamples = Math.ceil(this.transientWindowTime / 1000 * this.sampleRate);
+        // Obviously they are bounded
+        if (this.transientWindowTimeSamples > this.internalBufferSize)
+        {
+            this.transientWindowTimeSamples = this.internalBufferSize;
+        }
         // Reset
         this.transientWaitTimeInSamples = 0;
         this.transientWaiting = false;
@@ -257,16 +266,16 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         let currentmax = -1;
         for (let i = 0; i < this.internalBufferSize; i++)
         {
+            // Record max
+            currentmax = Math.max(currentmax, Math.abs(this.internalBuffer[i]));
+
             // See if we have reached the end of a transient window
-            if ((i % this.transientTimeInSamples) + 1 == this.transientTimeInSamples || i == this.internalBufferSize - 1)
+            if ((i % this.transientTimeInSamples) + 1 == this.transientTimeInSamples)
             {
                 // Record maximum
                 maxes.push(currentmax);
                 currentmax = -1;
             }
-
-            // Record max
-            currentmax = Math.max(currentmax, Math.abs(this.internalBuffer[i]));
         }
 
         if (maxes.length == 0)
@@ -278,15 +287,16 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         // Normalize the maxes
         let minmax = Math.min(...maxes);
         let maxmax = Math.max(...maxes) - minmax;
-        let avgmax = 0;
-        if (minmax != 0 && maxmax != 0)
+        if (maxmax == 0)
         {
-            for (let i = 0; i < maxes.length; i++)
-            {
-                maxes[i] -= minmax;
-                maxes[i] /= maxmax;
-                avgmax += maxes[i];
-            }
+            maxmax = 1;
+        }
+        let avgmax = 0;
+        for (let i = 0; i < maxes.length; i++)
+        {
+            maxes[i] -= minmax;
+            maxes[i] /= maxmax;
+            avgmax += maxes[i];
         }
 
         avgmax /= maxes.length;
@@ -307,7 +317,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             {
                 // Begin waiting
                 this.transientWaiting = true;
-                this.transientWaitTimeInSamples = this.internalBufferSize + this.processingRate;
+                this.transientWaitTimeInSamples = this.internalBufferSize;
 
                 return false;
             }

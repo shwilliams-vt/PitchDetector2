@@ -76,6 +76,7 @@ export default class PitchController
         this.processingMode = "ACF";
         this.smoothness = 0;
         this.precision = 0;
+        this.transientwindowtime = 375.1;
 
         // Indicating a "session"
         // Meaning a pitch has been detected
@@ -115,6 +116,10 @@ export default class PitchController
         if ("minconfidenceforsession" in parameters)
         {
             this.minconfidenceforsession = parameters.minconfidenceforsession;
+        }
+        if ("transientwindowtime" in parameters)
+        {
+            this.transientwindowtime = parameters.transientwindowtime;
         }
 
         // Get the Pitch Controller Directory
@@ -217,7 +222,8 @@ export default class PitchController
                 frameSize:this.frameSize,
                 mode:this.processingMode,
                 smoothness:this.smoothness,
-                precision: this.precision
+                precision: this.precision,
+                transientWindowTime: this.transientwindowtime
             }
         });
         bandpass.connect(analyzer);
@@ -266,7 +272,8 @@ export default class PitchController
         {
             console.log("transient silence: " + e.data.transientSilence);
         }
-        else if ("pitchInfo" in e.data)
+
+        if ("pitchInfo" in e.data)
         {
             // Set enabled 
             // e.data.insession = this.inrunningstate() && e.data.pitchInfo.pitch != NaN;
@@ -306,7 +313,6 @@ export default class PitchController
 
                 }
             }
-
         }
 
         // Set final vals
