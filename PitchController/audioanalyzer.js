@@ -54,6 +54,14 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         this.transientWindowTimeSamples = Math.ceil(this.transientWindowTime / 1000 * this.sampleRate);
         // Threshold (probability) for triggering a transient
         this.transientThreshold = 0.8;
+        // Number of transients to trigger a transient callback
+        this.numTransientsToTrigger = 2;
+        // The current number of transients considered (internal use only)
+        this.numTransients = 0;
+        // The period of time to listen for consecutive transient callbacks (s) 
+        this.transientListenPeriod = 2.0;
+        // the time of the last transient detected
+        this.timeOfLastTransient = Date.now();
 
         this.userEnabled = true;
         // When transient found, this is triggered
@@ -345,8 +353,6 @@ class WorkletAnalyzer extends AudioWorkletProcessor
                     // Reset wait time
                     this.transientWaitTimeInSamples = 0;
                     this.transientWaiting = false;
-                    // Change transient silence flag
-                    this.transientSilence = !this.transientSilence;
                     // Trigger a transient
                     this.ontransient();
                     return true;
@@ -371,7 +377,34 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
     ontransient()
     {
-        this.port.postMessage({transientSilence:this.transientSilence});        
+        let elapsed = Date.now() - this.timeOfLastTransient;
+
+        if (this.numTransients == 0)
+        {
+            this.timeOfLastTransient = Date.now();
+            this.numTransients = 1;
+        }
+        else if (elapsed / 1000 < this.transientListenPeriod)
+        {
+            if (this.numTransients < this.numTransientsToTrigger - 1)
+            {
+                this.numTransients++;
+            }
+            else
+            {
+                // Change transient silence flag
+                this.transientSilence = !this.transientSilence;
+
+                this.port.postMessage({transientSilence:this.transientSilence});        
+                this.numTransients = 0;
+                this.timeOfLastTransient = 0;
+            }
+        }
+        else
+        {
+            this.timeOfLastTransient = Date.now();
+            this.numTransients = 1;
+        }
     }
 
     processHPS()
