@@ -100,11 +100,14 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
         // Create buffers
         this.internalBuffer = new Float32Array(this.internalBufferSize);
-        this.transientBuffer = new Float32Array(this.internalBufferSize);
 
         // Determine transient time in sampels
         this.transientTimeInSamples = Math.ceil(this.transientTime / 1000 * this.internalBufferSize);
         this.transientWindowTimeSamples = Math.ceil(this.transientWindowTime / 1000 * this.sampleRate);
+
+        // Create buffers
+        this.transientBuffer = new Float32Array(this.transientWindowTimeSamples);
+
         // Obviously they are bounded
         if (this.transientWindowTimeSamples > this.internalBufferSize)
         {
@@ -148,8 +151,13 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         for (let i = 0; i < this.internalBufferSize; i++)
         {
             this.internalBuffer[i] = 0;
+        }
+        for (let i = 0; i < this.transientWindowTimeSamples; i++)
+        {
             this.transientBuffer[i] = 0;
         }
+
+        console.log(this.transientWindowTimeSamples)
     }
 
     process(inputs, outputs, parameters)
@@ -246,16 +254,18 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         // Normalize it
 
         // Load transient buffer
-        for (let i = 0; i < this.internalBufferSize; i++)
+        for (let i = 0; i < this.transientWindowTimeSamples; i++)
         {
-            this.transientBuffer[i] = this.internalBuffer[i];
+            let j = (this.internalBufferSize + this.internalBufferOffset + i - this.transientWindowTimeSamples) % this.internalBufferSize;
+
+            this.transientBuffer[i] = this.internalBuffer[j];
         }
 
         // Find the max
         const max = Math.max(...this.transientBuffer);
         if (max != 0)
         {
-            for (let i = 0; i < this.internalBufferSize; i++)
+            for (let i = 0; i < this.transientWindowTimeSamples; i++)
             {
                 this.transientBuffer[i] /= max;
             }
@@ -267,7 +277,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         for (let i = 0; i < this.internalBufferSize; i++)
         {
             // Record max
-            currentmax = Math.max(currentmax, Math.abs(this.internalBuffer[i]));
+            currentmax = Math.max(currentmax, Math.abs(this.transientBuffer[i]));
 
             // See if we have reached the end of a transient window
             if ((i % this.transientTimeInSamples) + 1 == this.transientTimeInSamples)

@@ -117,9 +117,9 @@ export default class PitchController
         {
             this.minconfidenceforsession = parameters.minconfidenceforsession;
         }
-        if ("transientwindowtime" in parameters)
+        if ("transientWindowTime" in parameters)
         {
-            this.transientwindowtime = parameters.transientwindowtime;
+            this.transientwindowtime = parameters.transientWindowTime;
         }
 
         // Get the Pitch Controller Directory
