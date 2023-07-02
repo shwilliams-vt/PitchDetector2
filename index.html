@@ -31,6 +31,7 @@
 
     const frameSize = 1024;
     const sampleRate = 44100;
+    const processingRate = 512;
 
     let controller = null;
 
@@ -73,7 +74,8 @@
         processingMode:"ACF",
         smoothness:40,
         precision:0,
-        transientWindowTime: 370
+        transientWindowTime: 370,
+        processingRate: processingRate
      });
 
     toggle.addEventListener("click", e=>{

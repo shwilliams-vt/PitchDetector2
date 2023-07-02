@@ -77,6 +77,7 @@ export default class PitchController
         this.smoothness = 0;
         this.precision = 0;
         this.transientwindowtime = 375.1;
+        this.processingRate = 256;
 
         // Indicating a "session"
         // Meaning a pitch has been detected
@@ -121,6 +122,10 @@ export default class PitchController
         {
             this.transientwindowtime = parameters.transientWindowTime;
         }
+        if ("processingRate" in parameters)
+        {
+            this.processingRate = parameters.processingRate;
+        }
 
         // Get the Pitch Controller Directory
         var currentDirectory = parseCurrentDirectory();
@@ -128,7 +133,7 @@ export default class PitchController
         this.pitchControllerDirectory = currentDirectory.substring(1, currentDirectory.lastIndexOf("/")) + "/";
 
         // Specify analyzer file path
-        this.analyzerPath = this.pitchControllerDirectory + "audioanalyzer.js";
+        this.analyzerPath = "/" + this.pitchControllerDirectory + "audioanalyzer.js";
     }
 
     inrunningstate()
@@ -223,7 +228,8 @@ export default class PitchController
                 mode:this.processingMode,
                 smoothness:this.smoothness,
                 precision: this.precision,
-                transientWindowTime: this.transientwindowtime
+                transientWindowTime: this.transientwindowtime,
+                processingRate: this.processingRate
             }
         });
         bandpass.connect(analyzer);

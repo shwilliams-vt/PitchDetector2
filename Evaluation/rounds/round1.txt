@@ -1,0 +1,40 @@
+{
+    "title": "Round 1, Test",
+    "control": false,
+    "pitchControllerSettings":
+    {
+        "frameSize": 1024,
+        "sampleRate": 44100,
+        "processingMode": "ACF",
+        "smoothness": 40,
+        "precision": 0,
+        "transientWindowTime": 370,
+        "processingRate": 512
+    },
+    "tests": [
+        {
+            "resolution": 10,
+            "randomStart": true,
+            "randomEnd": true,
+            "startFromLast": false,
+            "startValue": "NaN",
+            "endValue": "NaN"
+        },
+        {
+            "resolution": 100,
+            "randomStart": false,
+            "randomEnd": false,
+            "startFromLast": false,
+            "startValue": 0,
+            "endValue": 100
+        },
+        {
+            "resolution": 20,
+            "randomStart": false,
+            "randomEnd": false,
+            "startFromLast": false,
+            "startValue": 10,
+            "endValue": 5
+        }
+    ]
+}
