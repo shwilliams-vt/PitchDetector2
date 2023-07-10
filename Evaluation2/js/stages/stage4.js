@@ -53,7 +53,9 @@ params.onStart = async function()
         }
     }
 
+    console.log("initializing")
     await controller.initialize();
+    console.log("initialized")
     controller.toggle(true);
 }
 
