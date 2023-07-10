@@ -147,7 +147,6 @@ export default class PitchController
 
         // Specify analyzer file path
         this.analyzerPath = (this.pitchControllerDirectory === "PitchController/" ? "/" : "https://") + this.pitchControllerDirectory + "audioanalyzer.js";
-        console.log(this.analyzerPath)
     }
 
     toggleUseTransientToggle(val)
@@ -244,7 +243,6 @@ export default class PitchController
         }
 
         // Connect input to an analyser
-        console.log(this.analyzerPath)
         let res = await fetch(this.analyzerPath);
         let code = await res.text();
         let blob = new Blob([code], {type: 'application/javascript'});
