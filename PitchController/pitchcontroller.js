@@ -244,17 +244,13 @@ export default class PitchController
         }
 
         // Connect input to an analyser
-        console.log(1)
         let res = await fetch(this.analyzerPath);
         let code = await res.text();
-        console.log(code)
         let blob = new Blob([code], {type: 'application/javascript'});
         let reader = new FileReader();
         reader.readAsDataURL(blob);
         let module = await new Promise(resolve=>{reader.onloadend = ()=>{resolve(reader.result)}});
-        console.log(module)
         await audioContext.audioWorklet.addModule(module);
-        console.log(2)
         const analyzer = new AudioWorkletNode(audioContext, "worklet-analyzer", {
             processorOptions:{
                 sampleRate:audioContext.sampleRate,
