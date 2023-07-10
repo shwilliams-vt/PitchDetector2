@@ -244,7 +244,9 @@ export default class PitchController
         }
 
         // Connect input to an analyser
+        console.log(1)
         await audioContext.audioWorklet.addModule(this.analyzerPath);
+        console.log(2)
         const analyzer = new AudioWorkletNode(audioContext, "worklet-analyzer", {
             processorOptions:{
                 sampleRate:audioContext.sampleRate,
