@@ -145,9 +145,9 @@ export default class PitchController
         // omit the file name and first slash after domain
         this.pitchControllerDirectory = currentDirectory.substring(1, currentDirectory.lastIndexOf("/")) + "/";
 
-        console.log(this.pitchControllerDirectory)
         // Specify analyzer file path
         this.analyzerPath = (this.pitchControllerDirectory === "PitchController/" ? "/" : "") + this.pitchControllerDirectory + "audioanalyzer.js";
+        console.log(this.analyzerPath)
     }
 
     toggleUseTransientToggle(val)
