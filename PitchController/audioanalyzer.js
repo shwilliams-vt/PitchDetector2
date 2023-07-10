@@ -75,6 +75,8 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         // Use transient toggle
         this.useTransientToggle = true;
 
+        this.shouldShutdown = false;
+
         // For HPS
         // The number of harmonics to weigh for HPS
         this.HPSharmonicCount = 4;
@@ -101,6 +103,10 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             if ("useTransientToggle" in e.data)
             {
                 this.useTransientToggle = e.data.useTransientToggle;
+            }
+            if ("shutdown" in e.data)
+            {
+                this.shouldShutdown = true;
             }
         }
 
@@ -174,8 +180,20 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         console.log(this.transientWindowTimeSamples)
     }
 
+    shutdown()
+    {
+        console.log("Shutting down analyzer");
+        this.port.postMessage({shutdown:true})
+    }
+
     process(inputs, outputs, parameters)
     {
+
+        if (this.shouldShutdown == true)
+        {
+            this.shutdown();
+            return false;
+        }
 
         if (this.playback)
         {

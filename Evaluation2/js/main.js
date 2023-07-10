@@ -9,10 +9,24 @@ EVAL.progressInfo = document.getElementById("progress-info");
 EVAL.started = false;
 EVAL.stages = stages;
 
+const skip = 6;
+
+async function skip_modules()
+{
+    for (let i = 0; i < skip; i++)
+    {
+        await actual_next();
+    }
+}
+
 function actual_start()
 {
     EVAL.started = true;
-    actual_next();
+
+    if (skip && skip > 0)
+    {
+        skip_modules();
+    }    
 }
 
 
@@ -28,11 +42,11 @@ function start()
     }
 }
 
-function actual_next()
+async function actual_next()
 {
     console.log("next!")
     EVAL.progressInfo.innerHTML = `Progress: ${EVAL.stages.i + 1}/${EVAL.stages.stages.length}`;
-    EVAL.stages.next();
+    await EVAL.stages.next();
 }
 
 EVAL.next = function()
@@ -46,3 +60,4 @@ EVAL.next = function()
 window.EVAL = EVAL;
 
 start();
+

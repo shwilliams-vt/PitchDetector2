@@ -186,6 +186,7 @@ export default class PitchController
 
         // Get user input from microphone
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        this.stream = stream;
         // Create an audio context
         const audioContext = new AudioContext({sampleRate:this.sampleRate});
 
@@ -295,6 +296,19 @@ export default class PitchController
 
     _callback(e)
     {
+
+        if ("shutdown" in e.data)
+        {
+
+            if (this.afterprocessing)
+            {
+                this.afterprocessing({data:{shutdown:true}});
+            }
+
+            this.onshutdown();
+            return;
+        }
+
         // In this function, we handle the callback to perform a variety of things
         // Check for silence
         if ("transientSilence" in e.data)
@@ -358,4 +372,17 @@ export default class PitchController
     {
         this.afterprocessing = callback;
     }
+
+    destroy()
+    {
+        this.analyzer.port.postMessage({shutdown: true});
+    }
+
+    onshutdown()
+    {
+        this.stream.getTracks().forEach((track) => track.stop())
+        this.audioContext.close();
+        console.log("Bye bye! (DO NOT ATTEMPT TO USE THIS INSTANCE AGAIN)")
+    }
+
 }

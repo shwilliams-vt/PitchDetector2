@@ -22,4 +22,14 @@ async function waitOneFrame()
     });
 }
 
-export {loadResource, SHA256, waitOneFrame};
+function downloadJSON(results)
+{
+    let e = document.createElement("a");
+    let blob = new Blob([JSON.stringify(results, null, 2)], { type: "application/json" });
+    let obj = URL.createObjectURL(blob);
+    e.setAttribute("href", obj);
+    e.setAttribute("download", "Results from " + new Date());
+    e.click();
+} 
+
+export {loadResource, SHA256, waitOneFrame, downloadJSON};

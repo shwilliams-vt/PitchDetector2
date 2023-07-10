@@ -18,7 +18,7 @@ export default class Evaluator
         this.currentRound = 0;
         this.rounds = [];
         this.results = [];
-
+        
         this.onCompleteTest = ()=>{};
         this.onCompleteRound = ()=>{};
         this.onCompleteAllRounds = ()=>{};
@@ -36,8 +36,6 @@ export default class Evaluator
             let round = await parseRound(this.parameters.rounds[i], (results)=>scope._onCompleteTest(results));
             scope.rounds.push(round);
         }
-
-        console.log("ridb")
     }
 
     async start()
@@ -93,5 +91,10 @@ export default class Evaluator
         this.onCompleteTest();
 
         this.next();
+    }
+
+    async destroy()
+    {
+
     }
 }

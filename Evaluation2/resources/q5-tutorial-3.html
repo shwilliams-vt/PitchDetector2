@@ -1,0 +1,22 @@
+<div class="wall">
+    <h2 class="crimson">Our Tool</h2>
+    <p class="half-width blurb">
+        Our NVVI tool to be used in this study is a pitch-based tool that allows you to control parameters with the pitch of your humming/whistling/singing. However, there is an important design consideration we haven't considered yet.
+    </p>
+    <p class="half-width blurb">
+        Let's imagine you have 2 different parameters. How do you know which one you want to manipulate? Or, let's imagine you are talking to someone while using our tool. You naturally produce pitch when you talk. How can you specify when you want/don't want to use pitch manipulation?
+    </p>
+    <p class="half-width blurb">
+        To specify when you want to use our NVVI tool, we decided that transient detection will be a way to toggle the abledness of our tool. In short, transient detection means a detection of some abrupt and atypically loud impulse in the audio signal. Our tool interprets TWO TRANSIENTS as a signal to toggle the tool on and off. You can play around with this below by snapping your fingers twice consecutively near the microphone!
+    </p>
+    <div id="tool">
+        <i id="spinning" class="material-icons">highlight_off</i>
+        <span id="status" style="margin-left: 8px">STATUS: DISABLED </span>
+        <span id="pitch-detected" style="margin-left: 4px"></span>
+        <span id="pitch-number"></span>
+    </div>
+    <p class="half-width blurb">
+        Please click continue when you feel comfortable with our pitch-based NVVI tool. You may ask your proctor for help or more information.
+    </p>
+    <a onclick="EVAL.next()">Continue >></a>
+</div>

@@ -7,13 +7,14 @@ const params = {};
 let controller; 
 
 
-params.resource = "q4-tutorial-2";
+params.resource = "q5-tutorial-3";
 params.onStart = async function()
 {
 
     const spinning = document.getElementById("spinning");
     const pitchDetected = document.getElementById("pitch-detected");
     const pitchNumber = document.getElementById("pitch-number");
+    const status = document.getElementById("status");
 
     let rot = 0;
     const rotRate = 1 / 8;
@@ -33,6 +34,7 @@ params.onStart = async function()
 
     controller.afterprocessing = function(e)
     {
+        
         if (e.data.insession == true)
         {
             pitchDetected.innerHTML = " Pitch Detected (Hz): ";
@@ -51,10 +53,30 @@ params.onStart = async function()
             pitchNumber.innerHTML = "";
             spinning.style.transform = `scale(1.0)`;
         }
+
+        if ("transientSilence" in e.data)
+        {
+            if (e.data.transientSilence == false)
+            {
+                status.innerHTML = "STATUS: ENABLED ";
+            }
+            else
+            {
+                status.innerHTML = "STATUS: DISABLED "
+                spinning.innerHTML = "highlight_off";
+                pitchDetected.innerHTML = "";
+                pitchNumber.innerHTML = "";
+                spinning.style.transform = `scale(1.0)`;
+            }
+        }
     }
 
     await controller.initialize();
     controller.toggle(true);
+}
+
+params.onComplete = () => {
+    controller.destroy();
 }
 
 export default new Stage(params);
