@@ -146,7 +146,7 @@ export default class PitchController
         this.pitchControllerDirectory = currentDirectory.substring(1, currentDirectory.lastIndexOf("/")) + "/";
 
         // Specify analyzer file path
-        this.analyzerPath = (this.pitchControllerDirectory === "PitchController/" ? "/" : "") + this.pitchControllerDirectory + "audioanalyzer.js";
+        this.analyzerPath = (this.pitchControllerDirectory === "PitchController/" ? "/" : "https://") + this.pitchControllerDirectory + "audioanalyzer.js";
         console.log(this.analyzerPath)
     }
 
