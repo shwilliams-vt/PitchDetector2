@@ -18,7 +18,7 @@ export default class Evaluator
         this.currentRound = 0;
         this.rounds = [];
         this.results = [];
-        
+
         this.onCompleteTest = ()=>{};
         this.onCompleteRound = ()=>{};
         this.onCompleteAllRounds = ()=>{};
@@ -43,7 +43,7 @@ export default class Evaluator
         await this.buildRounds();
         
         this.currentRound = 0;
-        this.results = [];
+        this.results = {};
         await this.next();
     }
 
@@ -62,7 +62,7 @@ export default class Evaluator
 
         if (!nextTest)
         {
-            this.results.push([round.title, round.end()]);
+            this.results[round.title] = round.end();
             // Check if we have another round
             if (this.currentRound == this.rounds.length - 1)
             {

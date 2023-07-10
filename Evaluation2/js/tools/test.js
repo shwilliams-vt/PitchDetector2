@@ -76,7 +76,7 @@ export default class Test
         this.metadata.min = min;
         this.metadata.max = max;
 
-        let instructions = createLabel(`${this.parameters.testNumber}. Please match the bottom slider's position to the top slider's position.`)
+        let instructions = createLabel(`${this.parameters.testNumber}. Please match the bottom slider's position to the top slider's position using the pitch-based NVVI tool.`)
         let controlSlider = createSlider({min: min, max: max, startValue: endValue});
         let userSlider = createSlider({min: min, max: max, startValue: startValue});
 

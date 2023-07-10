@@ -32,4 +32,5 @@ function downloadJSON(results)
     e.click();
 } 
 
+
 export {loadResource, SHA256, waitOneFrame, downloadJSON};

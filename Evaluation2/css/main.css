@@ -13,7 +13,7 @@ body
 {
     height: 50px;
     width: 100%;
-    background-color: crimson;
+    background: linear-gradient(to bottom, crimson, darkred);
     display: flex;
     align-items: center;
     justify-content: space-between;
