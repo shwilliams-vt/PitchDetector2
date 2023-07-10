@@ -1,17 +1,291 @@
 const ACF = "ACF";
 const HPS = "HPS";
 
-import
-{ 
-    getMaxPeakBin, 
-    getNthPeakBin,
-    getMaxParabolicApproximatePeakBin,
-    getNthParabolicApproximatePeakBin,
-    getParabolicApproximateFrequency, 
-    getParabolicApproximatePower
-} from "./helpers.js";
+// import
+// { 
+//     getMaxPeakBin, 
+//     getNthPeakBin,
+//     getMaxParabolicApproximatePeakBin,
+//     getNthParabolicApproximatePeakBin,
+//     getParabolicApproximateFrequency, 
+//     getParabolicApproximatePower
+// } from "./helpers.js";
+// import FFTHelper from "./ffthelper.js";
 
-import FFTHelper from "./ffthelper.js";
+// -- Begin add helpers
+
+export function getMaxPeakBin(spectrum)
+{
+    let peakbin = -1;
+    let max = -1;
+    for (let i = 1; i < spectrum.length / 2; i++)
+    {
+        if (spectrum[i-1] < spectrum[i] && spectrum[i+1] < spectrum[i])
+        {
+            if (spectrum[i] > max)
+            {
+                max = spectrum[i];
+                peakbin = i;
+            }
+        }
+    }
+    return peakbin;
+}
+export function getNthPeakBin(spectrum, n)
+{
+    let peakbin = -1;
+    let max = -1;
+    let numpeaks = 0;
+    for (let i = 1; i < spectrum.length / 2; i++)
+    {
+        if (spectrum[i-1] < spectrum[i] && spectrum[i+1] < spectrum[i])
+        {
+            if (spectrum[i] > max)
+            {
+                max = spectrum[i];
+                peakbin = i;
+
+                numpeaks++;
+                if (numpeaks == n)
+                {
+                    break;
+                }
+            }
+        }
+    }
+    return peakbin;
+}
+export function getMaxParabolicApproximatePeakBin(spectrum)
+{
+    // 1. Find max peak bin
+    let peakbin = getMaxPeakBin(spectrum);
+
+    // 1.5 check bounds
+    if (peakbin <= 0)
+    {
+        peakbin = 1;
+    }
+    else if (peakbin >= spectrum.length - 1)
+    {
+        peakbin = spectrum.length - 2;
+    }
+
+    // 2. Create letter vars corresponding to alpha, beta, gamma
+    let a = spectrum[peakbin-1];
+    let b = spectrum[peakbin];
+    let c = spectrum[peakbin+1];
+
+    // 3. Slope
+    let m = 0.5 * (a - 2 * b + c);
+
+    // 3. Use equation to find interpolated bin value
+    let interpolatedbin = 0.25 * ((a - c) / m) + peakbin;
+
+    return interpolatedbin;
+}
+export function getNthParabolicApproximatePeakBin(spectrum, n)
+{
+    // 1. Find max peak bin
+    let peakbin = getNthPeakBin(spectrum, n);
+
+    // 1.5 check bounds
+    if (peakbin <= 0)
+    {
+        peakbin = 1;
+    }
+    else if (peakbin >= spectrum.length - 1)
+    {
+        peakbin = spectrum.length - 2;
+    }
+
+    // 2. Create letter vars corresponding to alpha, beta, gamma
+    let a = spectrum[peakbin-1];
+    let b = spectrum[peakbin];
+    let c = spectrum[peakbin+1];
+
+    // 3. Slope
+    let m = 0.5 * (a - 2 * b + c);
+
+    // 3. Use equation to find interpolated bin value
+    let interpolatedbin = 0.25 * ((a - c) / m) + peakbin;
+
+    return interpolatedbin;
+}
+export function getParabolicApproximateFrequency(spectrum, sampleRate)
+{
+    // Use parabolic interpolation
+    // https://ccrma.stanford.edu/~jos/sasp/Quadratic_Interpolation_Spectral_Peaks.html    
+
+    // 1. Get peak approximation bin
+    let interpolatedbin = getParabolicApproximateBin(spectrum, getParabolicApproximateBin(spectrum));
+
+    // 2. Return peak magnitude estimate
+    // return (b - 0.25 * (a - c) * interpolatedbin) / spectrum.length * sampleRate;
+
+    // Real 2. Return bin in terms of freq
+    return interpolatedbin / (spectrum.length) * sampleRate;
+}
+export function getParabolicApproximatePower(spectrum, sampleRate, frequency)
+{
+    // 1. Convert Hz to bin frequency
+    let binfrequency = frequency / sampleRate * spectrum.length;
+
+    // 2. Find closest bin
+    let nearestbin = Math.round(binfrequency);
+
+    // 3. Create letter vars corresponding to alpha, beta, gamma
+    let a = spectrum[nearestbin-1];
+    let b = spectrum[nearestbin];
+    let c = spectrum[nearestbin+1];
+
+    // 4. Slope (coefficient of power 2 polynomial)
+    let m = 0.5 * (a - 2 * b + c);
+
+    // 5. Use equation to solve for peak bin
+    let peakbinoffset = 0.25 * ((a - c) / m);
+
+    // 6. Use equation to find interpolated peak bin value
+    let peakbinvalue = b - 0.25 * (a - c) * peakbinoffset;
+
+    // 7. Return the frequency
+    return m * Math.pow(binfrequency - (peakbinoffset + nearestbin), 2) + peakbinvalue;
+}
+export default class FFTHelper
+{
+
+    constructor(parameters)
+    {
+        this.fftSize = 512;
+        this.sampleRate = 44100;
+        this.windowfunction = this.hannwindow;
+
+        // Load parameters
+        for (let i = 0; i < Object.keys(parameters).length; i++)
+        {
+            let key = Object.keys(parameters)[i];
+            this[key] = parameters[key]; 
+        }
+
+        this.initialize();
+    }
+
+    initialize()
+    {
+        // Create arrays
+        this.fftBuffer = new Float32Array(2*this.fftSize); // real and imaginary
+        this.tempFFTBuffer = new Float32Array(this.fftSize);
+        this.windowBuffer = new Float32Array(this.fftSize);
+
+        for (let i = 0; i < this.fftSize; i++)
+        {
+            // Clear fft buffer
+            this.fftBuffer[i] = 0;
+            this.fftBuffer[2*i] = 0;
+
+            this.tempFFTBuffer[i] = 0;
+
+            // Set window buffer
+            this.windowBuffer[i] = this.windowfunction(i, this.fftSize);
+        }
+    }
+
+    hannwindow (index, length)
+    {
+        return 0.5 * (1 - Math.cos((index * 2 * Math.PI) / (length - 1)));
+    }
+
+    fft()
+    {
+        // 1. Window and clear
+        for (let i = 0; i < this.fftSize; i++)
+        {
+            this.fftBuffer[i] = this.fftBuffer[i] * this.windowfunction(i, this.fftSize);
+            this.fftBuffer[i + this.fftSize] = 0;
+        }
+
+        // 3. Bit flip
+        let logSize = Math.log2(this.fftSize);
+
+        for (let i = 0; i < this.fftSize; i++)
+        {
+            let reversed = 0;
+            for (let j = 0; j < logSize; j++) {
+                reversed |= !!((1 << j) & i) << (logSize - j - 1);
+            }
+            
+            if (reversed >= i) {
+
+                let tmp = this.fftBuffer[i];
+                this.fftBuffer[i] = this.fftBuffer[reversed];
+                this.fftBuffer[reversed] = tmp;
+
+                tmp = this.fftBuffer[i + this.fftSize];
+                this.fftBuffer[i + this.fftSize] = this.fftBuffer[reversed + this.fftSize];
+                this.fftBuffer[reversed + this.fftSize] = tmp;
+            }
+        }
+
+        // 4. FFT
+
+        // Radix 2
+        const TWOPI = 2 * Math.PI;
+
+        // Log2 size stages (see diagram for how many butterfly stages there are)
+        for (let stage = 1; stage <= logSize; stage++) {
+
+            // distance between the start of each butterfly chain
+            let butterflySeperation = Math.pow(2,stage);
+
+            // distance between lo and hi elements in butterfly
+            let butterflyWidth = butterflySeperation / 2; 
+
+            // For each butterfly separation
+            for (let j = 0; j < this.fftSize; j += butterflySeperation) {
+
+                // Perform synthesis on offset (i-j) and offset + width (hi and lo) for each butterfly chain
+                for (let i = j; i < j + butterflyWidth; i++) {
+
+                    // get frequency, set coefficient
+                    // Note that sampling size is the butterfly seperation
+                    let f = (i-j) / butterflySeperation;
+                    let a = TWOPI * f;
+
+                    // Indices for hi and low values (low is actually further up)
+                    let idxHi = i;
+                    let idxLo = idxHi + butterflyWidth;
+
+                    // Get all time values, real and imaginary
+                    let gtkrHi = this.fftBuffer[idxHi];
+                    let gtkiHi = this.fftBuffer[idxHi + this.fftSize];
+                    let gtkrLo = this.fftBuffer[idxLo];
+                    let gtkiLo = this.fftBuffer[idxLo + this.fftSize];
+
+                    // Recall the below is the exact same as adding all vals from DFT
+                    let ValRLo = gtkrLo * Math.cos(a) - gtkiLo * Math.sin(a);
+                    let ValILo = gtkrLo * Math.sin(a) + gtkiLo * Math.cos(a);
+                    // Nature of the Radix 2 algorithm means the hi val is equal to itself (see diagram)
+                    let ValRHi = gtkrHi;
+                    let ValIHi = gtkiHi;
+
+                    // Now add the lo to the high and TODO
+                    this.fftBuffer[idxHi] = ValRLo + ValRHi;
+                    this.fftBuffer[idxHi + this.fftSize] = ValILo + ValIHi;
+                    this.fftBuffer[idxLo] = ValRHi - ValRLo;
+                    this.fftBuffer[idxLo + this.fftSize] = ValIHi - ValILo;
+
+                }
+            }
+        }
+    }
+
+    magnitude(index)
+    {
+        return Math.sqrt(Math.pow(this.fftBuffer[index], 2) + Math.pow(this.fftBuffer[index + this.fftSize], 2));
+    }
+}
+
+// -- End helpers
+
 
 class Report
 {
