@@ -18,6 +18,7 @@ function drawTest(test)
 function drawRound(round)
 {
     let domElem = document.createElement("div");
+    domElem.classList.add("inline");
 
     for (let j = 0; j < round.length; j++)
     {
@@ -30,6 +31,7 @@ function drawRound(round)
 function drawEvaluation(results)
 {
     let domElem = document.createElement("div");
+    domElem.classList.add("img-fit");
 
     let rounds = Object.keys(results);
 

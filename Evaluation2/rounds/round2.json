@@ -20,6 +20,14 @@
             "startFromLast": false,
             "startValue": "NaN",
             "endValue": "NaN"
+        },
+        {
+            "resolution": 500,
+            "randomStart": true,
+            "randomEnd": true,
+            "startFromLast": false,
+            "startValue": "NaN",
+            "endValue": "NaN"
         }
     ]
 }

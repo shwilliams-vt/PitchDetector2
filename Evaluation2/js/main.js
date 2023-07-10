@@ -26,6 +26,10 @@ function actual_start()
     if (skip && skip > 0)
     {
         skip_modules();
+    }
+    else
+    {
+        actual_next()
     }    
 }
 

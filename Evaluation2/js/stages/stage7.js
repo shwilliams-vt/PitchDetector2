@@ -17,7 +17,7 @@ params.onStart = async function()
 
     const evalParams = {
         domElem: document.getElementById("phase1"),
-        rounds: ["./rounds/round1.json"]
+        rounds: ["./rounds/round2.json"]
     };
 
     evaluator = new Evaluator(evalParams);
@@ -34,7 +34,18 @@ params.onStart = async function()
 
         let rounds = Object.keys(results);
 
-        document.getElementById("phase1").appendChild(VIZ.drawEvaluation(results));
+        let label = document.createElement("h3");
+        label.innerText = "Phase 1 - Results";
+
+        let resultsTable = document.createElement("div");
+        resultsTable.style.maxHeight = "250px";
+        resultsTable.style.height = "250px";
+        resultsTable.style.display = "inline-block";
+
+        resultsTable.appendChild(VIZ.drawEvaluation(results))
+
+        document.getElementById("phase1").appendChild(label);
+        document.getElementById("phase1").appendChild(resultsTable);
 
         
 
