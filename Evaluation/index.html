@@ -27,6 +27,15 @@
     });
 
     // evaluator.onEnd TODO
+    evaluator.onCompleteAllRounds = (results)=>{
+        let e = document.createElement("a");
+        let blob = new Blob([JSON.stringify(results, null, 2)], { type: "application/json" });
+        let obj = URL.createObjectURL(blob);
+        e.setAttribute("href", obj);
+        e.setAttribute("download", "Results from " + new Date());
+        e.click();
+    }
+
 
     window.startEvaluation = function() 
     {

@@ -83,11 +83,20 @@ export default class PitchController
         // Meaning a pitch has been detected
         this.insession = false;
 
+        // Use transient detection for enabled/disabled
+        this.useTransientToggle = true;
+
         // The minimum confience level to be in a session
         this.minconfidenceforsession = 0.7;
 
         // Session variables 
         this.session = null;
+
+        // if no parameters
+        if (parameters === undefined)
+        {
+            parameters = {};
+        }
 
         // parameters
         if ("sampleRate" in parameters)
@@ -126,6 +135,10 @@ export default class PitchController
         {
             this.processingRate = parameters.processingRate;
         }
+        if ("useTransientToggle" in parameters)
+        {
+            this.useTransientToggle = parameters.useTransientToggle;
+        }
 
         // Get the Pitch Controller Directory
         var currentDirectory = parseCurrentDirectory();
@@ -134,6 +147,15 @@ export default class PitchController
 
         // Specify analyzer file path
         this.analyzerPath = "/" + this.pitchControllerDirectory + "audioanalyzer.js";
+    }
+
+    toggleUseTransientToggle(val)
+    {
+        val = val || !this.useTransientToggle;
+
+        this.useTransientToggle = val;
+
+        this.analyzer.port.postMessage({useTransientToggle:val});
     }
 
     inrunningstate()
@@ -250,6 +272,7 @@ export default class PitchController
 
         // Set initial enabled state in analyzer
         analyzer.port.postMessage({enabled:this.inrunningstate()});
+        analyzer.port.postMessage({useTransientToggle:this.useTransientToggle});
 
         // Initialized
         this.analyzer = analyzer;

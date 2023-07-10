@@ -72,6 +72,8 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         this.transientWaiting = false;
         // Allows for audio playback
         this.playback = true;
+        // Use transient toggle
+        this.useTransientToggle = true;
 
         // For HPS
         // The number of harmonics to weigh for HPS
@@ -95,6 +97,10 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             if ("enabled" in e.data)
             {
                 this.userEnabled = e.data.enabled;
+            }
+            if ("useTransientToggle" in e.data)
+            {
+                this.useTransientToggle = e.data.useTransientToggle;
             }
         }
 
@@ -223,10 +229,13 @@ class WorkletAnalyzer extends AudioWorkletProcessor
     {
 
         // 1. Detect transient
-        this.detectTransient();
+        if (this.useTransientToggle)
+        {
+            this.detectTransient();
+        }
 
         // If we are in a silence, skip processing
-        if (this.transientSilence)
+        if (this.transientSilence && this.useTransientToggle)
         {
             return;
         }
