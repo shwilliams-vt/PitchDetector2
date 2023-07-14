@@ -7,6 +7,6 @@ const params = {};
 let controller; 
 
 
-params.resource = "q5-tutorial-3";
+params.resource = "q5-tutorial-3-1";
 
 export default new Stage(params);

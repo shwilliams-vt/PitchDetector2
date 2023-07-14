@@ -32,5 +32,68 @@ function downloadJSON(results)
     e.click();
 } 
 
+function postError(msg, e)
+{
+    let main = document.getElementById("main");
+    main.innerHTML = "";
 
-export {loadResource, SHA256, waitOneFrame, downloadJSON};
+    let wall = document.createElement("div");
+    wall.classList.add("wall");
+    main.appendChild(wall);
+
+    let title = document.createElement("h2");
+    title.innerText = "Uh oh!";
+    wall.appendChild(title);
+
+    let msgBody = document.createElement("div");
+    msgBody.classList.add("basic-page")
+    msgBody.innerHTML = msg;
+    wall.appendChild(msgBody);
+
+    if (e !== undefined)
+    {
+        let extra = e;
+
+        let extraBody = document.createElement("p");
+        extraBody.classList.add("extra-error");
+        extraBody.innerText = "MORE DETAILS: " + extra;
+        wall.appendChild(extraBody)
+    }
+}
+
+function animationLoop()
+{
+
+    requestAnimationFrame(animationLoop)
+
+    try 
+    {
+        // Fill in spaces
+        let spaces = document.getElementsByTagName("space");
+
+        for (const space of spaces)
+        {
+            if (space.getAttribute("_") === null)
+            {
+                let n = parseInt(space.getAttribute("n"));
+
+                for (let j = 0; j < n; j++)
+                {
+                    space.innerHTML += "&nbsp;"
+                }
+
+                space.setAttribute("_", "1")
+
+                
+            }
+        }
+    }
+    finally {
+
+    }
+    
+}
+animationLoop();
+
+
+export {loadResource, SHA256, waitOneFrame, downloadJSON, postError};

@@ -264,7 +264,7 @@ export default class PitchController
         bandpass.connect(analyzer);
 
         // Connect analyzer to destination
-        analyzer.connect(audioContext.destination);
+        // analyzer.connect(audioContext.destination);
 
         audioContext.resume();
         this.audioContext = audioContext;
@@ -274,7 +274,7 @@ export default class PitchController
         let scope = this;
         analyzer.port.onmessage = e =>{
 
-            scope._callback(e);
+            scope._callback(e); 
         }
 
         // Set initial enabled state in analyzer

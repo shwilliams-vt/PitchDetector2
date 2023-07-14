@@ -9,6 +9,11 @@ body
     background-color: white;
 }
 
+space
+{
+    white-space: pre;
+}
+
 #header
 {
     height: 50px;
@@ -48,6 +53,12 @@ body
     justify-content: space-between;
 }
 
+.italic
+{
+    font-style: italic;
+    font-weight: bold;
+}
+
 .inline
 {
     display: inline-block;
@@ -85,6 +96,14 @@ body
     color:white;
 }
 
+.basic-page
+{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
 .wall
 {
     width: 100%;
@@ -109,6 +128,12 @@ body
     margin:8px;
 }
 
+.extra-error
+{
+    color: #888;
+    font-size:2vmin;
+}
+
 input[type=text]
 {
     padding: 4px;
@@ -125,9 +150,19 @@ a
     margin: 4px;
     font-weight: bold;
     color:white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 a:hover
 {
     cursor: pointer;
     font-weight: bold;
+}
+
+#grant-mic
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
