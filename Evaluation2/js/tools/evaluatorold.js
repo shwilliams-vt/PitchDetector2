@@ -97,4 +97,16 @@ export default class Evaluator
     {
 
     }
+
+    getController()
+    {
+        let round = this.rounds[this.currentRound];
+
+        if (round === undefined || round === null)
+        {
+            return undefined;
+        }
+
+        return round.pitchController;
+    }
 }

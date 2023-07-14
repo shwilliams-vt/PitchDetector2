@@ -84,8 +84,10 @@ params.onStart = async function()
         
     }
 
+
     await evaluator.start();
 
+    document.getElementById("tool-wrapper").appendChild(evaluator.getController().buildTool());
 }
 
 params.onComplete = async function(params)

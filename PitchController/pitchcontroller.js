@@ -367,6 +367,49 @@ export default class PitchController
         // Set final vals
         e.data.insession = this.insession;
 
+        // Draw tool
+        if (this.tool !== undefined)
+        {
+
+            let {pitchDetected, pitchNumber, status, rot, rotRate, rotScale, spinning} = this.tool;
+
+            if (e.data.insession == true)
+            {
+                pitchDetected.innerHTML = " Pitch Detected (Hz): ";
+                pitchNumber.innerHTML = e.data.session.lastpitch;
+
+                rot += rotRate;
+                spinning.innerHTML = "hearing";
+                let num = 1 + rotScale * Math.sin(rot);
+                spinning.style.transform = `scale(${num})`;
+            }
+            else
+            {
+                spinning.innerHTML = "highlight_off";
+                pitchDetected.innerHTML = "Pitch not detected";
+                pitchNumber.innerHTML = "";
+                spinning.style.transform = `scale(1.0)`;
+            }
+
+            if ("transientSilence" in e.data)
+            {
+                if (e.data.transientSilence == false)
+                {
+                    status.innerHTML = "STATUS: ENABLED ";
+                }
+                else
+                {
+                    status.innerHTML = "STATUS: DISABLED "
+                    spinning.innerHTML = "highlight_off";
+                    pitchDetected.innerHTML = "";
+                    pitchNumber.innerHTML = "";
+                    spinning.style.transform = `scale(1.0)`;
+                }
+            }
+            
+    
+        }
+
         // Callback
         if (this.afterprocessing)
         {
@@ -389,6 +432,44 @@ export default class PitchController
         this.stream.getTracks().forEach((track) => track.stop())
         this.audioContext.close();
         console.log("Bye bye! (DO NOT ATTEMPT TO USE THIS INSTANCE AGAIN)")
+    }
+
+    buildTool()
+    {
+        const main = document.createElement("div");
+        main.id = "tool";
+        const sp = document.createElement("i");
+        sp.id = "spinning";
+        sp.classList.add("material-icons");
+        sp.innerText = "highlight_off";
+        const st = document.createElement("span");
+        st.id = "status";
+        st.innerText = "STATUS: DISABLED ";
+        const pd = document.createElement("span");
+        pd.id = "pitch-detected";
+        pd.style.marginLeft = "4px";
+        const pn = document.createElement("span");
+        pn.id = "pitch-number";
+
+        main.appendChild(sp);
+        main.appendChild(st);
+        main.appendChild(pd);
+        main.appendChild(pn);
+
+
+        this.tool = {
+            rot : 0,
+            rotRate : 1 / 8,
+            rotScale : 0.1,
+
+            main: main,
+            spinning: sp,
+            status: st,
+            pitchDetected: pd,
+            pitchNumber: pn,
+        }
+
+        return main;
     }
 
 }

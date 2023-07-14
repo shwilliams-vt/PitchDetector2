@@ -32,7 +32,7 @@ export default class Evaluator
     {
         await UTILS.waitOneFrame();
 
-        this.evaluator.start();
+        await this.evaluator.start();
 
 
     }
@@ -48,7 +48,11 @@ export default class Evaluator
     async destroy()
     {
         await this.evaluator.destroy();
-        
+    }
+
+    getController()
+    {
+        return this.evaluator.getController();
     }
 
 

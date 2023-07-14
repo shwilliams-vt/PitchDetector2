@@ -76,7 +76,7 @@ export default class Test
         this.metadata.min = min;
         this.metadata.max = max;
 
-        let instructions = createLabel(`${this.parameters.testNumber}. Please use the NNVI tool to move the bottom slider's position so that it aligns with the top slider's position.`)
+        let instructions = createLabel(`${this.parameters.testNumber}. Please use the NVVI tool to move the bottom slider's position so that it aligns with the top slider's position.`)
         let controlSlider = createSlider({min: min, max: max, startValue: endValue});
         controlSlider.setAttribute("disabled", "true");
         let userSlider = createSlider({min: min, max: max, startValue: startValue});
