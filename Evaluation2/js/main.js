@@ -63,5 +63,5 @@ EVAL.next = function()
 
 window.EVAL = EVAL;
 
-start();
+window.onload = start;
 

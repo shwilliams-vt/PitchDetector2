@@ -371,22 +371,26 @@ export default class PitchController
         if (this.tool !== undefined)
         {
 
-            let {pitchDetected, pitchNumber, status, rot, rotRate, rotScale, spinning} = this.tool;
+            let {main, status, spinning, pitchDetected, pitchNumber, rot, rotRate, rotScale} = this.tool;
 
             if (e.data.insession == true)
             {
+                // Pitch has been detected (in session)
+
                 pitchDetected.innerHTML = " Pitch Detected (Hz): ";
                 pitchNumber.innerHTML = e.data.session.lastpitch;
 
-                rot += rotRate;
                 spinning.innerHTML = "hearing";
                 let num = 1 + rotScale * Math.sin(rot);
                 spinning.style.transform = `scale(${num})`;
+                this.tool.rot += rotRate;
             }
             else
             {
+                // Pitch has NOT been detected (NOT in session)
+
                 spinning.innerHTML = "highlight_off";
-                pitchDetected.innerHTML = "Pitch not detected";
+                pitchDetected.innerHTML = "Listening...";
                 pitchNumber.innerHTML = "";
                 spinning.style.transform = `scale(1.0)`;
             }
@@ -395,14 +399,22 @@ export default class PitchController
             {
                 if (e.data.transientSilence == false)
                 {
-                    status.innerHTML = "STATUS: ENABLED ";
+                    // Turning on tool
+                    status.innerHTML = "ON";
+                    main.style.background = "darkgreen";
+                    pitchDetected.style.display = "inline"
+                    pitchNumber.style.display = "inline"
                 }
                 else
                 {
-                    status.innerHTML = "STATUS: DISABLED "
+                    // Turning off tool
+                    main.style.background = "maroon";
+                    status.innerHTML = "OFF"
                     spinning.innerHTML = "highlight_off";
                     pitchDetected.innerHTML = "";
+                    pitchDetected.style.display = "none"
                     pitchNumber.innerHTML = "";
+                    pitchNumber.style.display = "none"
                     spinning.style.transform = `scale(1.0)`;
                 }
             }
@@ -438,21 +450,31 @@ export default class PitchController
     {
         const main = document.createElement("div");
         main.id = "tool";
+        main.style.background = "maroon";
+
+        const name = document.createElement("span");
+        name.innerText = "NVVI:"
+
+        const st = document.createElement("span");
+        st.id = "status";
+        st.innerText = "OFF";
+
         const sp = document.createElement("i");
         sp.id = "spinning";
         sp.classList.add("material-icons");
         sp.innerText = "highlight_off";
-        const st = document.createElement("span");
-        st.id = "status";
-        st.innerText = "STATUS: DISABLED ";
+        
         const pd = document.createElement("span");
         pd.id = "pitch-detected";
-        pd.style.marginLeft = "4px";
+        pd.style.display = "none"
+
         const pn = document.createElement("span");
         pn.id = "pitch-number";
+        pn.style.display = "none"
 
-        main.appendChild(sp);
+        main.appendChild(name);
         main.appendChild(st);
+        main.appendChild(sp);
         main.appendChild(pd);
         main.appendChild(pn);
 
