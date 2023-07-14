@@ -61,6 +61,11 @@ function postError(msg, e)
     }
 }
 
+function createTool(controller)
+{
+    
+}
+
 function animationLoop()
 {
 

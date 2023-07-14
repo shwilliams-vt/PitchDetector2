@@ -15,6 +15,15 @@ let evaluator;
 params.onStart = async function()
 {
 
+    const spinning = document.getElementById("spinning");
+    const pitchDetected = document.getElementById("pitch-detected");
+    const pitchNumber = document.getElementById("pitch-number");
+    const status = document.getElementById("status");
+
+    let rot = 0;
+    const rotRate = 1 / 8;
+    const rotScale = 0.1;
+
     const evalParams = {
         domElem: document.getElementById("phase1"),
         rounds: ["./rounds/round2.json"]

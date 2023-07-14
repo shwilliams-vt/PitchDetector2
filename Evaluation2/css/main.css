@@ -58,6 +58,18 @@ space
     font-weight: bold;
 }
 
+#tool
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: maroon;
+    border-radius: 8px;
+    padding: 10px 20px;
+    color: white;
+    font-weight: bold;
+}
+
 .italic
 {
     font-style: italic;
