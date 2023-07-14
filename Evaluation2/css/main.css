@@ -154,6 +154,12 @@ space
     color: #999;
 }
 
+.graphic span
+{
+    font-size: 10vmin;
+    color: #999;   
+}
+
 .half-width
 {
     width: 50%;
