@@ -5,6 +5,15 @@ const params = {};
 
 params.resource = "q3-tutorial-1";
 
+function success(stream)
+{
+    stream.getTracks().forEach((track) => {
+        track.stop();
+    });
+
+    EVAL.next();
+}
+
 function generateError(e)
 {
     UTILS.postError(`
@@ -20,7 +29,7 @@ params.onStart = () => {
     mic.addEventListener("click", async _=>{
         
         navigator.mediaDevices.getUserMedia({audio:true})
-            .then(EVAL.next)
+            .then(success)
             .catch(generateError)
     });
 

@@ -57,4 +57,8 @@ params.onStart = async function()
     controller.toggle(true);
 }
 
+params.onComplete = () => {
+    controller.destroy();
+}
+
 export default new Stage(params);

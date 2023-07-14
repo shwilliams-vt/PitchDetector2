@@ -274,7 +274,7 @@ export default class PitchController
         let scope = this;
         analyzer.port.onmessage = e =>{
 
-            scope._callback(e); 
+            scope._callback(e);
         }
 
         // Set initial enabled state in analyzer
