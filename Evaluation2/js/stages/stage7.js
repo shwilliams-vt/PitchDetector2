@@ -56,31 +56,7 @@ params.onStart = async function()
         document.getElementById("phase1").appendChild(label);
         document.getElementById("phase1").appendChild(resultsTable);
 
-        
-
-        // for (let i = 0; i < rounds.length; i++)
-        // {
-        //     let round = results[rounds[i]];
-
-        //     for (let j = 0; j < round.length; j++)
-        //     {
-        //         let test = round[j];
-        //         console.log(test)
-
-        //         let labels = test.dataPoints.map(xy=>{ return parseInt(xy[0]).toString() });
-        //         let datapoints1 = test.dataPoints.map(xy=>{ return xy[1] });
-        //         let datapoints2 = test.dataPoints.map(xy=>{ return test.metadata.endValue });
-
-        //         let chartParams = {
-        //             titles: ["Test 1 Results", "Correct Value"],
-        //             labels: labels,
-        //             datapoints: [datapoints1, datapoints2]
-        //         };
-        //         let chart = new ChartJS(chartParams);
-        //         document.getElementById("phase1").appendChild(chart.generateHTML())
-        //     }
-            
-        // }
+        document.getElementById("tool-wrapper").innerHTML = "";
         
     }
 

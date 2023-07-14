@@ -9,11 +9,25 @@ import stage5_2 from "./stage5-2.js"
 import stage5_3 from "./stage5-3.js"
 import stage6 from "./stage6.js"
 import stage7 from "./stage7.js"
+import stage8 from "./stage8.js"
 
 export default
 {
     i: 0,
-    stages:  [stage1, stage2, stage2_1, stage3, stage4, stage5, stage5_1, stage5_2, stage5_3, stage6, stage7],
+    stages:  [
+        stage1, 
+        stage2, 
+        stage2_1, 
+        stage3, 
+        stage4, 
+        stage5, 
+        stage5_1, 
+        stage5_2, 
+        stage5_3, 
+        stage6, 
+        stage7, 
+        stage8
+    ],
     current_stage: null,
 
     next: async function()
