@@ -889,7 +889,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
 
 
-        let smoothedPitch = report.pitchInfo.pitch;
+        let smoothedPitch = Math.round(report.pitchInfo.pitch);
         let smoothedConfidence = report.pitchInfo.confidence;
 
         // Apply precision (pitch only)

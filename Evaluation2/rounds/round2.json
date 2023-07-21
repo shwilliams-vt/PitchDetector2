@@ -7,7 +7,7 @@
         "frameSize": 1024,
         "sampleRate": 44100,
         "processingMode": "ACF",
-        "smoothness": 20,
+        "smoothness": 30,
         "precision": 0,
         "transientWindowTime": 370,
         "processingRate": 512

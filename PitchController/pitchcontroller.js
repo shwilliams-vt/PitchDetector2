@@ -356,6 +356,7 @@ export default class PitchController
             }
 
             smoothedPitch /= this.lastreports.length + 1;
+            smoothedPitch = Math.round(smoothedPitch);
             smoothedConfidence /= this.lastreports.length + 1;
 
             // if (isvalid)
@@ -382,7 +383,7 @@ export default class PitchController
                     this.lastreports = [];
                     for (let i = 0; i < this.smoothness; i++)
                     {
-                        this.lastreports[i] = new Report({pitch:report.pitchInfo.pitch, confidence:report.pitchInfo.confidence});
+                        this.lastreports.push(new Report({pitch:report.pitchInfo.pitch, confidence:report.pitchInfo.confidence}));
                     }
 
                     console.log("Started session!");
@@ -434,7 +435,10 @@ export default class PitchController
                 // Pitch has been detected (in session)
 
                 pitchDetected.innerHTML = " Pitch Detected (Hz): ";
-                pitchNumber.innerHTML = e.data.session.lastpitch;
+                pitchNumber.innerHTML = e.data.session.lastpitch + " | ";
+                console.log(e.data.session)
+                pitchNumber.innerHTML += (e.data.session.currentoffset > 0) ? "+" : "";
+                pitchNumber.innerHTML += e.data.session.currentoffset;
 
                 spinning.innerHTML = "hearing";
                 let num = 1 + rotScale * Math.sin(rot);
