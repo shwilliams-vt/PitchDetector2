@@ -427,10 +427,11 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
         // Store last pitches
         this.lastreports = [];
-        for (let i = 0; i < this.smoothness; i++)
-        {
-            this.lastreports[i] = new Report({pitch:0, confidence:0});
-        }
+        // for (let i = 0; i < this.smoothness; i++)
+        // {
+        //     this.lastreports[i] = new Report({pitch:0, confidence:0});
+        // }
+        // Moved to first detection
 
         // Fill buffers
         for (let i = 0; i < this.frameSize; i++)
@@ -896,6 +897,15 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
         report.pitchInfo.confidence = Math.max(0, Math.min(1, report.pitchInfo.confidence));
 
+
+        // Check if any last reports
+        if (this.lastreports.length != this.smoothness)
+        {
+            for (let i = 0; i < this.smoothness; i++)
+            {
+                this.lastreports[i] = new Report({pitch:report.pitchInfo.pitch, confidence:report.pitchInfo.confidence});
+            }
+        }
         // Apply smoothness
         // Do this by averaging last n pitches
         let smoothedPitch = report.pitchInfo.pitch;
@@ -906,8 +916,8 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             smoothedConfidence += this.lastreports[i].confidence;
         }
 
-        smoothedPitch /= this.lastreports.length + 1;
-        smoothedConfidence /= this.lastreports.length + 1;
+        smoothedPitch /= this.lastreports.length;
+        smoothedConfidence /= this.lastreports.length;
 
         // Apply precision (pitch only)
         if (this.precision >= 0)
