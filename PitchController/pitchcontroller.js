@@ -89,6 +89,10 @@ export default class PitchController
         this.processingRate = 256;
         this.lastreports = [];
 
+        // Confidenc misses to end session
+        this.maxconfidencemisses = 3;
+        this.currconfidencemisses = 0;
+
         // Indicating a "session"
         // Meaning a pitch has been detected
         this.insession = false;
@@ -334,10 +338,23 @@ export default class PitchController
 
         if ("pitchInfo" in e.data)
         {
-            // Set enabled 
-            // e.data.insession = this.inrunningstate() && e.data.pitchInfo.pitch != NaN;
+
             let isvalid = this.inrunningstate() && !isNaN(e.data.pitchInfo.pitch);
             let report = e.data;
+
+            if (e.data.pitchInfo.confidence >= this.minconfidenceforsession)
+            {
+                this.currconfidencemisses = 0;
+            }
+            else
+            {
+                this.currconfidencemisses++;
+            }
+            // Check if confidence misses
+            if (this.currconfidencemisses == this.maxconfidencemisses)
+            {
+                isvalid = false;
+            }
 
             let smoothedPitch = report.pitchInfo.pitch;
             let smoothedConfidence = report.pitchInfo.confidence;
@@ -386,6 +403,7 @@ export default class PitchController
                         this.lastreports.push(new Report({pitch:report.pitchInfo.pitch, confidence:report.pitchInfo.confidence}));
                     }
 
+                    this.currconfidencemisses = 0;
                     console.log("Started session!");
                 }
                 else
@@ -436,7 +454,6 @@ export default class PitchController
 
                 pitchDetected.innerHTML = " Pitch Detected (Hz): ";
                 pitchNumber.innerHTML = e.data.session.lastpitch + " | ";
-                console.log(e.data.session)
                 pitchNumber.innerHTML += (e.data.session.currentoffset > 0) ? "+" : "";
                 pitchNumber.innerHTML += e.data.session.currentoffset;
 
