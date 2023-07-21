@@ -41,6 +41,15 @@ function getFrequencyFromSpectrum(spectrum, sampleRate)
     return interpolatedbin / (spectrum.length) * sampleRate;
 }
 
+class Report
+{
+    constructor(parameters)
+    {
+        this.pitch = parameters.pitch;
+        this.confidence = parameters.confidence;
+    }
+}
+
 class Session
 {
     constructor(initialpitch)
@@ -78,6 +87,7 @@ export default class PitchController
         this.precision = 0;
         this.transientwindowtime = 375.1;
         this.processingRate = 256;
+        this.lastreports = [];
 
         // Indicating a "session"
         // Meaning a pitch has been detected
@@ -327,9 +337,39 @@ export default class PitchController
             // Set enabled 
             // e.data.insession = this.inrunningstate() && e.data.pitchInfo.pitch != NaN;
             let isvalid = this.inrunningstate() && !isNaN(e.data.pitchInfo.pitch);
+            let report = e.data;
+
+            let smoothedPitch = report.pitchInfo.pitch;
+            let smoothedConfidence = report.pitchInfo.confidence;
+
+            if (this.lastreports.length == 0 && this.smoothness != 0)
+            {
+                for (let i = 0; i < this.smoothness; i++)
+                {
+                    this.lastreports[i] = new Report({pitch:report.pitchInfo.pitch, confidence:report.pitchInfo.confidence});
+                }
+            }
+            for (let i = 0; i < this.lastreports.length; i++)
+            {
+                smoothedPitch += this.lastreports[i].pitch;
+                smoothedConfidence += this.lastreports[i].confidence;
+            }
+
+            smoothedPitch /= this.lastreports.length + 1;
+            smoothedConfidence /= this.lastreports.length + 1;
+
+            // if (isvalid)
+            // {
+            //     console.log("---", smoothedPitch, report.pitchInfo.pitch);
+            //     console.log(this.lastreports.length)
+            // }
+            
+
+            this.lastreports.shift();
+            this.lastreports.push(new Report({pitch:report.pitchInfo.pitch, confidence:report.pitchInfo.confidence}));
 
             // Check confidence
-            if (isvalid && e.data.pitchInfo.confidence >= this.minconfidenceforsession)
+            if (isvalid && smoothedConfidence >= this.minconfidenceforsession)
             {
                 if (!this.insession)
                 {
@@ -337,16 +377,25 @@ export default class PitchController
                     this.insession = true;
 
                     // Create a session
-                    this.session = new Session(e.data.pitchInfo.pitch);
+                    this.session = new Session(report.pitchInfo.pitch);
+
+                    this.lastreports = [];
+                    for (let i = 0; i < this.smoothness; i++)
+                    {
+                        this.lastreports[i] = new Report({pitch:report.pitchInfo.pitch, confidence:report.pitchInfo.confidence});
+                    }
 
                     console.log("Started session!");
                 }
                 else
                 {
                     // Update our current session
-                    this.session.update(e.data.pitchInfo.pitch);
+                    this.session.update(smoothedPitch);
                 }
                 e.data.session = this.session;
+
+                
+
             }
             else
             {
@@ -366,6 +415,13 @@ export default class PitchController
 
         // Set final vals
         e.data.insession = this.insession;
+
+        if (e.data.session === undefined)
+        {
+            e.data.session = {}
+            e.data.session.lastpitch = undefined;
+        }
+
 
         // Draw tool
         if (this.tool !== undefined)
@@ -421,6 +477,7 @@ export default class PitchController
             
     
         }
+
 
         // Callback
         if (this.afterprocessing)

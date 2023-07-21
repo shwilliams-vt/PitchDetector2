@@ -425,14 +425,6 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             fftSize: this.frameSize
         });
 
-        // Store last pitches
-        this.lastreports = [];
-        // for (let i = 0; i < this.smoothness; i++)
-        // {
-        //     this.lastreports[i] = new Report({pitch:0, confidence:0});
-        // }
-        // Moved to first detection
-
         // Fill buffers
         for (let i = 0; i < this.frameSize; i++)
         {
@@ -451,8 +443,6 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         {
             this.transientBuffer[i] = 0;
         }
-
-        console.log(this.transientWindowTimeSamples)
     }
 
     shutdown()
@@ -898,26 +888,9 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         report.pitchInfo.confidence = Math.max(0, Math.min(1, report.pitchInfo.confidence));
 
 
-        // Check if any last reports
-        if (this.lastreports.length != this.smoothness)
-        {
-            for (let i = 0; i < this.smoothness; i++)
-            {
-                this.lastreports[i] = new Report({pitch:report.pitchInfo.pitch, confidence:report.pitchInfo.confidence});
-            }
-        }
-        // Apply smoothness
-        // Do this by averaging last n pitches
+
         let smoothedPitch = report.pitchInfo.pitch;
         let smoothedConfidence = report.pitchInfo.confidence;
-        for (let i = 0; i < this.lastreports.length; i++)
-        {
-            smoothedPitch += this.lastreports[i].pitch;
-            smoothedConfidence += this.lastreports[i].confidence;
-        }
-
-        smoothedPitch /= this.lastreports.length;
-        smoothedConfidence /= this.lastreports.length;
 
         // Apply precision (pitch only)
         if (this.precision >= 0)
@@ -932,10 +905,6 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             const pow2 = Math.pow(2, -this.precision);
             smoothedPitch = Math.round(smoothedPitch / pow2) * pow2;
         }
-
-        // Shift last reports
-        this.lastreports.shift();
-        this.lastreports.push(new Report({pitch:report.pitchInfo.pitch, confidence:report.pitchInfo.confidence}));
 
         report.pitchInfo.pitch = smoothedPitch;
         report.pitchInfo.confidence = smoothedConfidence;
