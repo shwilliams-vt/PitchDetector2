@@ -51,10 +51,13 @@ params.onStart = async function()
         resultsTable.style.height = "250px";
         resultsTable.style.display = "inline-block";
 
-        resultsTable.appendChild(VIZ.drawEvaluation(results))
-
         document.getElementById("phase1").appendChild(label);
         document.getElementById("phase1").appendChild(resultsTable);
+
+        (async () => {
+            await UTILS.waitOneFrame()
+            resultsTable.appendChild(VIZ.drawEvaluation(results, false));
+        })()
 
         document.getElementById("tool-wrapper").innerHTML = "";
         

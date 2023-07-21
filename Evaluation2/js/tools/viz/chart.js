@@ -1,10 +1,14 @@
 import { waitOneFrame } from "../../util.js";
 
+let FIRST_ID = 0;
+let CHARTS = [];
+
 const defaultConfig = {
     type: 'line',
     data: {},
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         title: {
           display: true,
@@ -15,21 +19,29 @@ const defaultConfig = {
         intersect: false,
       },
       scales: {
-        x: {
-          display: true,
-          title: {
-            display: true
-          }
-        },
-        y: {
-          display: true,
-          title: {
+        xAxes:
+          [{
             display: true,
-            text: 'Value'
-          },
-          suggestedMin: 0,
-          suggestedMax: 10
-        }
+            scaleLabel: {
+                display: true,
+                labelString: 'Time (ms)'
+            }
+        }],
+        yAxes:
+          [{
+          display: true,
+          ticks: {
+              beginAtZero: true,
+              steps: 10,
+              stepValue: 5,
+              min: 0,
+              max: 1000
+          }
+        }]
+      },
+      title: {
+        display: true,
+        text: 'Chart.js Line Chart - Legend'
       }
     },
   };
@@ -42,15 +54,22 @@ export default class ChartJS
 
         params = params || {};
 
+        this.id = FIRST_ID;
+        CHARTS.push(this);
+        FIRST_ID++;
+
         params.interactive = params.interactive || false;
 
-        let config = defaultConfig;
+        let config = JSON.parse(JSON.stringify(defaultConfig));
+
+        config.options.scales.yAxes[0].ticks.min = params.min || 0;
+        config.options.scales.yAxes[0].ticks.max = params.max || 100;
 
         params.titles = params.titles || ["Untitled", "Untitled"];
 
-        const labels = params.labels //
-        const datapoints = params.datapoints // [0, 20, 20, 60, 60, 120, NaN, 180, 120, 125, 105, 110, 170];
-        const data = {
+        let labels = params.labels //
+        let datapoints = params.datapoints // [0, 20, 20, 60, 60, 120, NaN, 180, 120, 125, 105, 110, 170];
+        let data = {
             labels: labels,
             datasets: [
                 {
@@ -72,56 +91,79 @@ export default class ChartJS
             ]
         };
 
+        config.data = data;
         let scope = this;
-        this.chartParams = {type: "line", data:data, options: {animation: {onComplete: (()=>scope.onRender() || (()=>{}))}}};
+        let t = FIRST_ID - 1;
+        console.log(t);
+        config.options.animation = {onComplete: (()=>{scope.onRender(t)})}
+
+        this.chartParams = config;
         this.params = params;
+        this.rendered = false;
 
     }
 
-    generateHTML()
+    generateHTML(onLoad)
     {
         this.domElem = document.createElement("div");
         this.domElem.classList.add("img-fit");
         let canvas = document.createElement("canvas");
-        canvas.classList.add("img-fit");
+        canvas.classList.add("img-fit-important");
         this.canvas = canvas;
-    
+
+        this.onLoad = onLoad;
+
         this.domElem.appendChild(canvas);
 
-        this.chart = new Chart(canvas.getContext("2d"), this.chartParams);
+        let scope = this;
+        (async () => {
 
-        
-        
-        
+          await waitOneFrame();
+          scope.chart = new Chart(canvas.getContext("2d"), scope.chartParams);
+          scope.chart.scope = scope;
+
+        })()
+
+        this.domElem.style.opacity = "0";
+
         return this.domElem;
+
+
     }
 
-    onRender()
+    onRender(id)
     {
-      let scope = this;
-      if (!scope.params.interactive)
+      let scope = CHARTS[id];
+      if (scope.params.interactive == false && scope.rendered == false)
       {
           (async () => {
-            // await waitOneFrame();
-            // await waitOneFrame();
-            // await waitOneFrame();
-            console.log("DFDFDFDDF")
             await waitOneFrame();
             var newCanvas = scope.canvas.cloneNode(true);
             let ctx = newCanvas.getContext("2d");
             ctx.fillStyle = "white";
             ctx.globalAlpha = 1;
             ctx.fillRect(0, 0, scope.canvas.width, scope.canvas.height);
+            await waitOneFrame();
             ctx.drawImage(scope.canvas, 0, 0);
             let img = document.createElement("img");
             let src = newCanvas.toDataURL('image/jpeg');
             img.setAttribute("src", src);
             img.classList.add("img-fit");
+            await waitOneFrame();
             scope.chart.destroy();
+            await waitOneFrame();
             scope.domElem.removeChild(scope.canvas);
-            scope.chart = null;
+            // scope.chart = null;
             scope.domElem.appendChild(img);
+
+            if (scope.onLoad !== undefined)
+            {
+              scope.onLoad();
+            }
           })()
       }
+
+      this.domElem.style.opacity = "1.0";
+      scope.rendered = true;
     }
 }
