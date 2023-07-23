@@ -1,10 +1,8 @@
 import Test from "./test.js"
 import PitchController from "../../../PitchController/pitchcontroller.js";
 
-function parseTest(testParams, testNumber, pitchController, recordInterval, control, callback)
+function parseTest(testParams, pitchController, control, callback)
 {
-    testParams["testNumber"] = testNumber;
-    testParams["recordInterval"] = recordInterval;
     let test = new Test(testParams);
 
     test.pitchController = pitchController;
@@ -35,7 +33,13 @@ export default class Round
         let i = 0;
         parameters.tests.forEach(test=>{
             i++;
-            scope.tests.push(parseTest(test, i, this.pitchController, this.recordInterval, this.control, (results)=>scope._onCompleteTest(results)));
+            scope.tests.push(parseTest(
+                {...test, 
+                    testNumber:i, 
+                    recordInterval:this.recordInterval,
+                    roundTitle: scope.title
+                }, 
+                this.pitchController, this.control, (results)=>scope._onCompleteTest(results)));
         });
     }
 
@@ -58,14 +62,13 @@ export default class Round
         return null;
     }
 
-    end()
+    async end()
     {
         let results = this.results;
-        console.log(results)
         this.results = null;
 
         // Clean up
-        this.pitchController.destroy();
+        await this.pitchController.destroy();
 
         return results;
     }

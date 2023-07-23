@@ -512,16 +512,34 @@ export default class PitchController
         this.afterprocessing = callback;
     }
 
-    destroy()
+    async destroy()
     {
         this.analyzer.port.postMessage({shutdown: true});
+
+        let scope = this;
+        await new Promise(resolve=>{
+            var checkIfDestroyed = setInterval(()=>{
+                if (scope.destroyed !== undefined && scope.destroyed == true)
+                {
+                    clearInterval(checkIfDestroyed);
+                    resolve();
+                }
+            }, 20);
+        })
     }
 
     onshutdown()
     {
         this.stream.getTracks().forEach((track) => track.stop())
         this.audioContext.close();
-        console.log("Bye bye! (DO NOT ATTEMPT TO USE THIS INSTANCE AGAIN)")
+
+        if (this.tool !== undefined)
+        {
+            this.tool.main.parentElement.removeChild(this.tool.main);
+        }
+
+        console.log("Bye bye! (DO NOT ATTEMPT TO USE THIS INSTANCE AGAIN)");
+        this.destroyed = true;
     }
 
     buildTool()

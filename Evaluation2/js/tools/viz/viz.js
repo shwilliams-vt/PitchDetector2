@@ -7,7 +7,8 @@ function drawTest(test, interactive)
     let datapoints2 = test.dataPoints.map(xy=>{ return test.metadata.endValue });
 
     let chartParams = {
-        titles: ["Test Results", "Correct Value"],
+        title: test.title,
+        subtitles: ["Test Results", "Correct Value"],
         labels: labels,
         datapoints: [datapoints1, datapoints2],
         min: 0,
@@ -25,7 +26,6 @@ function drawRound(round, interactive)
 
     for (let j = 0; j < round.length; j++)
     {
-        console.log(j)
         domElem.appendChild(drawTest(round[j], interactive));
     }
 
@@ -36,6 +36,8 @@ function drawEvaluation(results, interactive)
 {
     let domElem = document.createElement("div");
     domElem.classList.add("img-fit");
+    domElem.style.overflowX = "scroll";
+    domElem.style.whiteSpace = "nowrap";
 
     let rounds = Object.keys(results);
 

@@ -30,6 +30,8 @@ export default class Evaluator
 
     async start()
     {
+
+        this.evaluator.onRoundStart = this.onRoundStart;
         await UTILS.waitOneFrame();
 
         await this.evaluator.start();

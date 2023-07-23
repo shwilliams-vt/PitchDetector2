@@ -26,7 +26,14 @@ params.onStart = async function()
 
     const evalParams = {
         domElem: document.getElementById("phase1"),
-        rounds: ["./rounds/round2.json"]
+        rounds: [
+            "./rounds/official/phase1/round1.json",
+            "./rounds/official/phase1/round2.json",
+            "./rounds/official/phase1/round3.json",
+            "./rounds/official/phase1/round4.json",
+            "./rounds/official/phase1/round5.json",
+            "./rounds/official/phase1/round6.json",
+        ]
     };
 
     evaluator = new Evaluator(evalParams);
@@ -63,10 +70,13 @@ params.onStart = async function()
         
     }
 
+    evaluator.onRoundStart = async () => {
+        document.getElementById("tool-wrapper").appendChild(evaluator.getController().buildTool());
+    }
+
 
     await evaluator.start();
 
-    document.getElementById("tool-wrapper").appendChild(evaluator.getController().buildTool());
 }
 
 params.onComplete = async function(params)

@@ -6,5 +6,6 @@ export default class Results
         this.time = params.time;
         this.metadata = params.metadata;
         this.dataPoints = params.dataPoints;
+        this.title = params.title;
     }
 }

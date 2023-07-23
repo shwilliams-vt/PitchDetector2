@@ -1,0 +1,41 @@
+{
+    "title": "Round 3",
+    "control": false,
+    "recordInterval": 100,
+    "pitchControllerSettings":
+    {
+        "frameSize": 1024,
+        "sampleRate": 44100,
+        "processingMode": "ACF",
+        "smoothness": 40,
+        "precision": 0,
+        "transientWindowTime": 370,
+        "processingRate": 512
+    },
+    "tests": [
+        {
+            "resolution": 500,
+            "randomStart": true,
+            "randomEnd": true,
+            "startFromLast": false,
+            "startValue": "NaN",
+            "endValue": "NaN"
+        },
+        {
+            "resolution": 500,
+            "randomStart": true,
+            "randomEnd": true,
+            "startFromLast": false,
+            "startValue": "NaN",
+            "endValue": "NaN"
+        },
+        {
+            "resolution": 500,
+            "randomStart": true,
+            "randomEnd": true,
+            "startFromLast": false,
+            "startValue": "NaN",
+            "endValue": "NaN"
+        }
+    ]
+}

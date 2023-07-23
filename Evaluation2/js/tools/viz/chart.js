@@ -65,7 +65,8 @@ export default class ChartJS
         config.options.scales.yAxes[0].ticks.min = params.min || 0;
         config.options.scales.yAxes[0].ticks.max = params.max || 100;
 
-        params.titles = params.titles || ["Untitled", "Untitled"];
+        params.subtitles = params.subtitles || ["Untitled", "Untitled"];
+        params.title = params.title || "Untitled";
 
         let labels = params.labels //
         let datapoints = params.datapoints // [0, 20, 20, 60, 60, 120, NaN, 180, 120, 125, 105, 110, 170];
@@ -73,7 +74,7 @@ export default class ChartJS
             labels: labels,
             datasets: [
                 {
-                    label: params.titles[0],
+                    label: params.subtitles[0],
                     data: datapoints[0],
                     borderColor: "#FF0000",
                     fill: false,
@@ -81,7 +82,7 @@ export default class ChartJS
                     tension: 0.4
                 },
                 {
-                    label: params.titles[1],
+                    label: params.subtitles[1],
                     data: datapoints[1],
                     borderColor: "#0000FF",
                     fill: false,
@@ -94,8 +95,11 @@ export default class ChartJS
         config.data = data;
         let scope = this;
         let t = FIRST_ID - 1;
-        console.log(t);
         config.options.animation = {onComplete: (()=>{scope.onRender(t)})}
+        config.options.title = {
+          display: true,
+          text: params.title
+        }
 
         this.chartParams = config;
         this.params = params;

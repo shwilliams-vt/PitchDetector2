@@ -54,15 +54,19 @@ export default class Evaluator
         if (round && !round.started)
         {
             await round.begin();
+            if (this.onRoundStart !== undefined)
+            {
+                await this.onRoundStart();
+            }
         }
 
         this.domElem.innerHTML = "";
 
         let nextTest = round.next(this._onCompleteTest);
 
-        if (!nextTest)
+        if (nextTest == null)
         {
-            this.results[round.title] = round.end();
+            this.results[round.title] = await round.end();
             // Check if we have another round
             if (this.currentRound == this.rounds.length - 1)
             {
@@ -77,9 +81,14 @@ export default class Evaluator
 
                 let nextRound = this.rounds[this.currentRound];
                 nextRound.started = true;
-                nextRound.begin();
+                await nextRound.begin();
+                await round.begin();
+                if (this.onRoundStart !== undefined)
+                {
+                    await this.onRoundStart();
+                }
 
-                nextTest = round.next(this._onCompleteTest);
+                nextTest = nextRound.next(this._onCompleteTest);
             }
         }
 
