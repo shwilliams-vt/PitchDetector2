@@ -20,10 +20,7 @@ params.onStart = async function()
         rounds: [
             "./rounds/official/phase2/round1.json",
             "./rounds/official/phase2/round2.json",
-            // "./rounds/official/phase1/round3.json",
-            // "./rounds/official/phase1/round4.json",
-            // "./rounds/official/phase1/round5.json",
-            // "./rounds/official/phase1/round6.json",
+            "./rounds/official/phase2/round3.json"
         ]
     };
 
