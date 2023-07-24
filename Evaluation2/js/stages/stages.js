@@ -1,32 +1,36 @@
-import stage1 from "./stage1.js"
-import stage2 from "./stage2.js"
-import stage2_1 from "./stage2-1.js"
-import stage3 from "./stage3.js"
-import stage4 from "./stage4.js"
-import stage5 from "./stage5.js"
-import stage5_1 from "./stage5-1.js"
-import stage5_2 from "./stage5-2.js"
-import stage5_3 from "./stage5-3.js"
-import stage6 from "./stage6.js"
-import stage7 from "./stage7.js"
-import stage8 from "./stage8.js"
+import welcome from "./welcome.js"
+import introduction from "./introduction.js"
+import consent from "./consent.js"
+import access_mic from "./access-mic.js"
+import intro_pitch from "./intro-pitch.js"
+import tool_overview from "./tool-overview.js"
+import selection_overview from "./selection-overview.js"
+import selection_handling from "./selection-handling.js"
+import prototype_intro from "./prototype-intro.js"
+import phase_1_intro from "./phase-1-intro.js"
+import phase_1_eval from "./phase-1-eval.js"
+import phase_2_intro from "./phase-2-intro.js"
+import phase_2_eval from "./phase-2-eval.js"
+import end from "./end.js"
 
 export default
 {
     i: 0,
     stages:  [
-        stage1, 
-        stage2, 
-        stage2_1, 
-        stage3, 
-        stage4, 
-        stage5, 
-        stage5_1, 
-        stage5_2, 
-        stage5_3, 
-        stage6, 
-        stage7, 
-        stage8
+        welcome, 
+        introduction, 
+        consent, 
+        access_mic, 
+        intro_pitch, 
+        tool_overview, 
+        selection_overview, 
+        selection_handling, 
+        prototype_intro, 
+        phase_1_intro, 
+        phase_1_eval,  
+        phase_2_intro, 
+        phase_2_eval, 
+        end
     ],
     current_stage: null,
 

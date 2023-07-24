@@ -3,7 +3,7 @@ import * as UTILS from "../util.js";
 
 const params = {};
 
-params.resource = "q8";
+params.resource = "end";
 params.onComplete = async ()=>
 {
     

@@ -104,7 +104,16 @@ export default class Evaluator
 
     async destroy()
     {
+        let scope = this;
+        await new Promise(async resolve=>{
 
+            let c = scope.getController();
+            if (c !== undefined)
+            {
+                await c.destroy();
+            }
+            resolve();
+        });
     }
 
     getController()

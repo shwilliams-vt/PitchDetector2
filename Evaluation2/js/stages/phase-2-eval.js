@@ -8,31 +8,22 @@ import * as VIZ from "../tools/viz/viz.js"
 
 const params = {};
 
-params.resource = "q7-phase1-2";
+params.resource = "phase-2-eval";
 
 let evaluator;
 
 params.onStart = async function()
 {
 
-    const spinning = document.getElementById("spinning");
-    const pitchDetected = document.getElementById("pitch-detected");
-    const pitchNumber = document.getElementById("pitch-number");
-    const status = document.getElementById("status");
-
-    let rot = 0;
-    const rotRate = 1 / 8;
-    const rotScale = 0.1;
-
     const evalParams = {
-        domElem: document.getElementById("phase1"),
+        domElem: document.getElementById("phase2"),
         rounds: [
-            "./rounds/official/phase1/round1.json",
-            "./rounds/official/phase1/round2.json",
-            "./rounds/official/phase1/round3.json",
-            "./rounds/official/phase1/round4.json",
-            "./rounds/official/phase1/round5.json",
-            "./rounds/official/phase1/round6.json",
+            "./rounds/official/phase2/round1.json",
+            "./rounds/official/phase2/round2.json",
+            // "./rounds/official/phase1/round3.json",
+            // "./rounds/official/phase1/round4.json",
+            // "./rounds/official/phase1/round5.json",
+            // "./rounds/official/phase1/round6.json",
         ]
     };
 
@@ -51,15 +42,15 @@ params.onStart = async function()
         let rounds = Object.keys(results);
 
         let label = document.createElement("h3");
-        label.innerText = "Phase 1 - Results";
+        label.innerText = "Phase 2 - Results";
 
         let resultsTable = document.createElement("div");
         resultsTable.style.maxHeight = "250px";
         resultsTable.style.height = "250px";
         resultsTable.style.display = "inline-block";
 
-        document.getElementById("phase1").appendChild(label);
-        document.getElementById("phase1").appendChild(resultsTable);
+        document.getElementById("phase2").appendChild(label);
+        document.getElementById("phase2").appendChild(resultsTable);
 
         (async () => {
             await UTILS.waitOneFrame()
@@ -68,10 +59,6 @@ params.onStart = async function()
 
         document.getElementById("tool-wrapper").innerHTML = "";
         
-    }
-
-    evaluator.onRoundStart = async () => {
-        document.getElementById("tool-wrapper").appendChild(evaluator.getController().buildTool());
     }
 
 

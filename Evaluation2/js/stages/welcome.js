@@ -3,7 +3,7 @@ import * as UTILS from "../util.js";
 
 const params = {};
 
-params.resource = "q1";
+params.resource = "welcome";
 params.onComplete = async ()=>
 {
     let id = await UTILS.SHA256(new Date());

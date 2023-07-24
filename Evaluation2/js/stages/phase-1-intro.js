@@ -8,7 +8,7 @@ const params = {};
 let controller; 
 
 
-params.resource = "q6-phase1-1";
+params.resource = "phase-1-intro";
 params.onStart = async function()
 {
 

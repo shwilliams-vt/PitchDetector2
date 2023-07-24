@@ -3,7 +3,7 @@ import * as UTILS from "../util.js";
 
 const params = {};
 
-params.resource = "q3-tutorial-1";
+params.resource = "access-mic";
 
 function success(stream)
 {

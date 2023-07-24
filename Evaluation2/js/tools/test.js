@@ -35,6 +35,7 @@ export default class Test
         // this.control -- Control flag
         this.dataPoints = [];
         this.metadata = {};
+        this.description = parameters.description || "An empty test description";
 
         let scope = this;
 
@@ -78,7 +79,7 @@ export default class Test
 
         this.title = `${this.parameters.roundTitle}: Test ${this.parameters.testNumber}`;
 
-        let instructions = createLabel(`${this.title}. Please use the NVVI tool to move the bottom slider's position so that it aligns with the top slider's position.`)
+        let instructions = createLabel(`${this.title}. ${this.description}`);
         let controlSlider = createSlider({min: min, max: max, startValue: endValue});
         controlSlider.setAttribute("disabled", "true");
         let userSlider = createSlider({min: min, max: max, startValue: startValue});
@@ -106,12 +107,32 @@ export default class Test
                     scope._onSuccess();
                 }
             }
+
+            // Disable mouse use
+            userSlider.addEventListener("mousedown", e=>{
+                scope._MOUSING = true;
+                scope._LAST_VAL = e.target.value;
+            });
+            userSlider.addEventListener("input", e=>{
+
+                if (scope._MOUSING == true)
+                {
+                    e.preventDefault();
+                    e.target.value = scope._LAST_VAL;
+                }
+            });
+            userSlider.addEventListener("mouseup", e=>{
+                scope._MOUSING = false;
+            });
         }
         else
         {
             userSlider.addEventListener("input", e=>{
                 // onInput(e.target.value);
                 // onInput was checking if vals were equal
+            });
+            userSlider.addEventListener("mouseup", e=>{
+                scope._onSuccess();
             });
         }
 
@@ -122,14 +143,21 @@ export default class Test
         }, scope.parameters.recordInterval)
 
         this.startTime = performance.now();
-        this.pitchController.toggle(true);
+
+        if (this.control == false)
+        {
+            this.pitchController.toggle(true);
+        }
 
         return elem;
     }
 
     _onSuccess()
     {
-        this.pitchController.toggle(false);
+        if (this.control == false)
+        {
+            this.pitchController.toggle(false);
+        }
 
         this.onSuccess(new Results({
             time: (performance.now() - this.startTime) / 1000,

@@ -7,6 +7,6 @@ const params = {};
 let controller; 
 
 
-params.resource = "q5-tutorial-3-2";
+params.resource = "tool-overview";
 
 export default new Stage(params);

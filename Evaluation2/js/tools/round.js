@@ -3,6 +3,9 @@ import PitchController from "../../../PitchController/pitchcontroller.js";
 
 function parseTest(testParams, pitchController, control, callback)
 {
+
+    testParams.description = testParams.description || testParams.roundDescription;
+
     let test = new Test(testParams);
 
     test.pitchController = pitchController;
@@ -24,9 +27,14 @@ export default class Round
         this.currentTest = 0;
 
         this.title = parameters.title;
-        this.pitchController = new PitchController(parameters.pitchControllerSettings);
         this.control = parameters.control;
         this.recordInterval = parameters.recordInterval;
+        this.description = parameters.description || "An empty round description";
+
+        if (this.control == false)
+        {
+            this.pitchController = new PitchController(parameters.pitchControllerSettings);
+        }
 
         let scope = this;
 
@@ -37,7 +45,8 @@ export default class Round
                 {...test, 
                     testNumber:i, 
                     recordInterval:this.recordInterval,
-                    roundTitle: scope.title
+                    roundTitle: scope.title,
+                    roundDescription: scope.description
                 }, 
                 this.pitchController, this.control, (results)=>scope._onCompleteTest(results)));
         });
@@ -48,7 +57,10 @@ export default class Round
         this.results = [];
         this.started = true;
         this.currentTest = 0;
-        await this.pitchController.initialize();
+        if (this.control == false)
+        {
+            await this.pitchController.initialize();
+        }
     }
 
     next(onCompleteTest)
@@ -68,7 +80,10 @@ export default class Round
         this.results = null;
 
         // Clean up
-        await this.pitchController.destroy();
+        if (this.control == false)
+        {
+            await this.pitchController.destroy();
+        }
 
         return results;
     }

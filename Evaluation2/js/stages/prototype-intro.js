@@ -7,7 +7,7 @@ const params = {};
 let controller; 
 
 
-params.resource = "q5-tutorial-3-3";
+params.resource = "prototype-intro";
 params.onStart = async function()
 {
 
