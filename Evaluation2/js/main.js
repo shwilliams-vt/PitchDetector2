@@ -9,8 +9,8 @@ EVAL.progressInfo = document.getElementById("progress-info");
 EVAL.started = false;
 EVAL.stages = stages;
 
-// const skip = 13;
-const skip = 0;
+const skip = 12;
+// const skip = 0;
 
 async function skip_modules()
 {

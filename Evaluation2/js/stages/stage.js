@@ -27,7 +27,7 @@ export default class Stage
     {
         if (this.resourceLink !== "")
         {
-            let txt = await UTILS.loadResource(this.resourceLink);
+            let txt = await UTILS.loadHTMLResource(this.resourceLink);
             EVAL.main.innerHTML = txt;
         }
 

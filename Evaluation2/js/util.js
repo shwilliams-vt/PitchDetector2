@@ -1,6 +1,6 @@
-async function loadResource(name)
+async function loadHTMLResource(name)
 {
-    let res = await fetch("./resources/" + name + ".html");
+    let res = await fetch("./resources/html/" + name + ".html");
     let txt = await res.text();
     return txt;
 }
@@ -101,4 +101,4 @@ function animationLoop()
 animationLoop();
 
 
-export {loadResource, SHA256, waitOneFrame, downloadJSON, postError};
+export {loadHTMLResource, SHA256, waitOneFrame, downloadJSON, postError};

@@ -9,6 +9,7 @@ import selection_handling from "./selection-handling.js"
 import prototype_intro from "./prototype-intro.js"
 import phase_1_intro from "./phase-1-intro.js"
 import phase_1_eval from "./phase-1-eval.js"
+import phase_1_resp from "./phase-1-resp.js"
 import phase_2_intro from "./phase-2-intro.js"
 import phase_2_eval from "./phase-2-eval.js"
 import end from "./end.js"
@@ -28,6 +29,7 @@ export default
         prototype_intro, 
         phase_1_intro, 
         phase_1_eval,  
+        phase_1_resp,
         phase_2_intro, 
         phase_2_eval, 
         end

@@ -1,0 +1,53 @@
+{
+    "title" : "Phase 1 Response",
+    "label" : "",
+    "questions" : 
+    [
+        {
+            "id" : 1,
+            "question" : "Why are you running?",
+            "type" : "textarea",
+            "validate" : "return (value.length >= 3)"
+        },
+        {
+            "id" : 2,
+            "question" : "Why are you walking?",
+            "type" : "slider",
+            "extra-params" : 
+            {
+                "min" : 0,
+                "max" : 5
+            }
+        },
+        {
+            "id" : 3,
+            "question" : "Why are you crawling?",
+            "type" : "list",
+            "extra-params" : 
+            {
+                "multiple" : false,
+                "options" :
+                [
+                    "Because",
+                    "Nunya",
+                    "Sorry"
+                ]
+            }
+        },
+        {
+            "id" : 4,
+            "question" : "Favorite Ice cream?",
+            "type" : "list",
+            "extra-params" : 
+            {
+                "multiple" : true,
+                "options" :
+                [
+                    "Choco",
+                    "Vanill",
+                    "Sherb"
+                ]
+            }
+        }
+    ]
+}
