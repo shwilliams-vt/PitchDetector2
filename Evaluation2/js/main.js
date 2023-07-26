@@ -20,12 +20,13 @@ EVAL.generateJSON = function()
     obj.results = EVAL.results;
     obj.id = EVAL.id;
     obj.canWhistle = EVAL.canWhistle;
+    obj.date = new Date();
 
     return obj;
 }
 
 
-// const skip = 10;
+// const skip = 13;
 const skip = 0;
 
 async function skip_modules()
@@ -70,25 +71,23 @@ async function actual_next()
     await EVAL.stages.next();
 }
 
+async function help_next(num)
+{
+    for (let i = 0; i < num; i++)
+    {
+        await actual_next();
+    }
+}
+
 EVAL.next = function(num)
 {
     if (EVAL.started == true)
     {
-
-        if (num !== undefined)
+        if (isNaN(num))
         {
-            (async ()=> {
-                for (let i = 0; i < num; i++)
-                {
-                    await actual_next();
-                }
-            })()
-
+            num = 1;
         }
-        else
-        {
-            actual_next();
-        }
+        help_next(num);
     }
 }
 

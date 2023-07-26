@@ -17,8 +17,11 @@ class Question
         {
             questionnaire._callback(scope);
         };
+
         this.visited = false;
         this.complete = false;
+
+        this.optional = params.optional || false;
     }
 
     async build()
@@ -27,6 +30,12 @@ class Question
 
         const q = document.createElement("p");
         q.innerText = this.params.question;
+
+        if (this.optional == false)
+        {
+            q.classList.add("incomplete");
+        }
+        this.q = q;
         this.domElem.appendChild(q);
 
         let scope = this;
@@ -150,7 +159,22 @@ class Question
     checkCompletion()
     {
         let scope = this;
-        return (scope.validate || (()=>scope.complete = true))();
+        let complete = (scope.validate || (()=>scope.complete = true))();
+
+
+        if (this.optional == false)
+        {
+            if (complete)
+            {
+                this.q.classList.remove("incomplete");
+            }
+            else
+            {
+                this.q.classList.add("incomplete");
+            }
+        }
+
+        return complete;
     }
 }
 
@@ -250,7 +274,9 @@ export default class Questionnaire
 
     updateStatus()
     {
-        this.questions[this.currentQuestion].visited = true;
+        let q = this.questions[this.currentQuestion];
+        q.visited = true;
+
         this.status.innerText = "Question " + (this.currentQuestion + 1) + "/" + this.questions.length;
     }
 
@@ -260,7 +286,7 @@ export default class Questionnaire
         let scope = this;
 
         this.questions.forEach(question => {
-            if (question.complete == false || question.visited == false)
+            if (question.visited == false || (question.optional == false && question.complete == false))
             {
                 complete = false;
             }

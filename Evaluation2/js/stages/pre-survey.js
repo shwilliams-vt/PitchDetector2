@@ -17,8 +17,6 @@ params.onStart = async function()
         EVAL.canWhistle = results[6] === "Yes" ? true : false;
         EVAL.canWhistle &&= results[7] >= 2;
         let button;
-        console.log(results[7]);
-        console.log(EVAL.canWhistle);
         
         button = document.getElementById("finish");
         button.addEventListener("click", function() {

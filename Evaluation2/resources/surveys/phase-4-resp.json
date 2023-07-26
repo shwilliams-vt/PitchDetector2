@@ -37,7 +37,7 @@
             "type" : "list",
             "extra-params" : 
             {
-                "multiple" : false,
+                "multiple" : true,
                 "options" :
                 [
                     "NVVI tool",
@@ -60,8 +60,15 @@
         {
             "id" : 6,
             "type" : "textarea",
-            "question" : "Please provide any overall feedback on this study.",
+            "question" : "What potential use cases do you imagine for NVVI tools like the one presented in this study?",
             "validate" : "return (value.length >= 3)"
+        },
+        {
+            "id" : 7,
+            "type" : "textarea",
+            "question" : "(Optional) Please provide any overall feedback on this study.",
+            "validate" : "return (value.length >= 3)",
+            "optional" : true
         }
     ]
 }

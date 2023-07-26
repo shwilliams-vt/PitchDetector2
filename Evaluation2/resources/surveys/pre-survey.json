@@ -46,7 +46,8 @@
         {
             "id" : 5,
             "type" : "textarea",
-            "question" : "(Optional) Explain your musical background."
+            "question" : "(Optional) Explain your musical background.",
+            "optional" : true
         },
         {
             "id" : 6,

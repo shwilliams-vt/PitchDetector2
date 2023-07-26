@@ -2,7 +2,7 @@
     "title": "Round 3",
     "control": true,
     "recordInterval": 100,
-    "description": "Please use your mouse to move the bottom slider's position so that it aligns with the top slider's position.",
+    "description": "Please use your mouse to move the bottom slider's position so that it aligns, as close as you wish, with the top slider's position.",
     "pitchControllerSettings":
     {
         "frameSize": 1024,
