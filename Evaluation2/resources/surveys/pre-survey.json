@@ -71,7 +71,8 @@
             {
                 "min" : 0,
                 "max" : 5
-            }
+            },
+            "optional" : true
         }
     ]
 }

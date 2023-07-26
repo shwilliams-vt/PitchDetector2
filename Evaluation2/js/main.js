@@ -16,11 +16,14 @@ EVAL.canWhistle = true;
 EVAL.generateJSON = function()
 {
     let obj = {};
-    obj.surveys = EVAL.surveys;
-    obj.results = EVAL.results;
+    
     obj.id = EVAL.id;
     obj.canWhistle = EVAL.canWhistle;
     obj.date = new Date();
+
+    obj.surveys = EVAL.surveys;
+    obj.results = EVAL.results;
+    
 
     return obj;
 }
