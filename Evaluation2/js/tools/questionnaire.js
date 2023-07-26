@@ -278,12 +278,12 @@ export default class Questionnaire
         q.visited = true;
 
         this.status.innerText = "Question " + (this.currentQuestion + 1) + "/" + this.questions.length;
+        this.checkStatus();
     }
 
     checkStatus()
     {
         let complete = true;
-        let scope = this;
 
         this.questions.forEach(question => {
             if (question.visited == false || (question.optional == false && question.complete == false))
