@@ -8,7 +8,7 @@ import * as VIZ from "../tools/viz/viz.js"
 
 const params = {};
 
-params.resource = "phase-2-eval";
+params.resource = "phase-3-eval";
 
 let evaluator;
 
@@ -16,18 +16,21 @@ params.onStart = async function()
 {
 
     const evalParams = {
-        domElem: document.getElementById("phase2"),
+        domElem: document.getElementById("phase3"),
         rounds: [
-            "./rounds/official/phase2/round1.json",
-            "./rounds/official/phase2/round2.json",
-            "./rounds/official/phase2/round3.json"
+            "./rounds/official/phase3/round1.json",
+            "./rounds/official/phase3/round2.json",
+            "./rounds/official/phase3/round3.json",
+            "./rounds/official/phase3/round4.json",
+            "./rounds/official/phase3/round5.json",
+            "./rounds/official/phase3/round6.json"
         ]
     };
 
     evaluator = new Evaluator(evalParams);
 
     evaluator.onComplete = async results => {
-        EVAL.results.phase2 = results;
+        EVAL.results.phase3 = results;
         // UTILS.downloadJSON(results);
         
         let button = document.getElementById("finish");
@@ -38,15 +41,15 @@ params.onStart = async function()
         let rounds = Object.keys(results);
 
         let label = document.createElement("h3");
-        label.innerText = "Phase 2 - Results";
+        label.innerText = "Phase 3 - Results";
 
         let resultsTable = document.createElement("div");
         resultsTable.style.maxHeight = "250px";
         resultsTable.style.height = "250px";
         resultsTable.style.display = "inline-block";
 
-        document.getElementById("phase2").appendChild(label);
-        document.getElementById("phase2").appendChild(resultsTable);
+        document.getElementById("phase3").appendChild(label);
+        document.getElementById("phase3").appendChild(resultsTable);
 
         (async () => {
             await UTILS.waitOneFrame()

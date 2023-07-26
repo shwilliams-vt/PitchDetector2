@@ -1,0 +1,43 @@
+{
+    "title" : "Phase 2 Response",
+    "label" : "",
+    "questions" : 
+    [
+        {
+            "id" : 1,
+            "question" : "Rate your comfort with using the NVVI tool with whistling on a scale of 0 (terrible) to 5 (amazing) from left to right.",
+            "type" : "slider",
+            "extra-params" : 
+            {
+                "min" : 0,
+                "max" : 5
+            }
+        },
+        {
+            "id" : 2,
+            "type" : "textarea",
+            "question" : "Explain your experience using whistling to control the NVVI tool. For example, is whistling easy? Does it control the slider like you expect it to?",
+            "validate" : "return (value.length >= 3)"
+        },
+        {
+            "id" : 3,
+            "type" : "textarea",
+            "question" : "Compare your experiences of using whistling or humming to control the NVVI tool. For example, which was more comfortable? Which was more effective?",
+            "validate" : "return (value.length >= 3)"
+        },
+        {
+            "id" : 4,
+            "question" : "Overall, which approach would you use for the tool? (You may also choose both or neither)",
+            "type" : "list",
+            "extra-params" : 
+            {
+                "multiple" : true,
+                "options" :
+                [
+                    "Whistling",
+                    "Humming"
+                ]
+            }
+        }
+    ]
+}

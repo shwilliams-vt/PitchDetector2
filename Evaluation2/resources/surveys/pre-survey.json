@@ -1,0 +1,76 @@
+{
+    "title" : "Pre-Survey Response",
+    "label" : "",
+    "questions" : 
+    [
+        {
+            "id" : 1,
+            "question" : "Rate your background knowledge with NVVI tools from 0 (none) to 5 (a lot) from left to right.",
+            "type" : "slider",
+            "extra-params" : 
+            {
+                "min" : 0,
+                "max" : 5
+            }
+        },
+        {
+            "id" : 2,
+            "question" : "Rate your musical background (e.g. playing melodic instruments, singing) from 0 (minimal) to 5 (highly experienced) from left to right.",
+            "type" : "slider",
+            "extra-params" : 
+            {
+                "min" : 0,
+                "max" : 5
+            }
+        },
+        {
+            "id" : 3,
+            "question" : "Rate your pitch identification ability (i.e. perfect pitch) from 0 (minimal) to 5 (perfect pitch) from left to right.",
+            "type" : "slider",
+            "extra-params" : 
+            {
+                "min" : 0,
+                "max" : 5
+            }
+        },
+        {
+            "id" : 4,
+            "question" : "Rate your humming ability from 0 (inaccurate) to 5 (accurate, stable pitch) from left to right.",
+            "type" : "slider",
+            "extra-params" : 
+            {
+                "min" : 0,
+                "max" : 5
+            }
+        },
+        {
+            "id" : 5,
+            "type" : "textarea",
+            "question" : "(Optional) Explain your musical background."
+        },
+        {
+            "id" : 6,
+            "question" : "Can you whistle?",
+            "type" : "list",
+            "extra-params" : 
+            {
+                "multiple" : false,
+                "options" :
+                [
+                    "Yes",
+                    "No"
+                ]
+            }
+        },
+        {
+            "id" : 7,
+            "question" : "If you can whistle, rate your whistling ability from 0 (inaccurate) to 5 (accurate, stable pitch) from left to right.",
+            "type" : "slider",
+            "extra-params" : 
+            {
+                "min" : 0,
+                "max" : 5
+            }
+        }
+    ]
+}

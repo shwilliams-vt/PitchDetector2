@@ -194,11 +194,11 @@ export default class Questionnaire
         foot.classList.add("qfoot");
 
         const prev_btn = document.createElement("a");
-        prev_btn.innerText = "<<";
+        prev_btn.innerText = "<< Back";
         prev_btn.addEventListener("click", ()=>scope.move(-1));
 
         const next_btn = document.createElement("a");
-        next_btn.innerText = ">>";
+        next_btn.innerText = "Next >>";
         next_btn.addEventListener("click", ()=>scope.move(1));
 
         const status = document.createElement("span");
@@ -275,13 +275,11 @@ export default class Questionnaire
 
     collectResults()
     {
-        let results = [];
+        let results = {};
         this.questions.forEach(question =>{
             let id =  question.params.id;
             let val = question.getValue();
-            let obj = {};
-            obj[id] = val;
-            results.push(obj)
+            results[id] = val;
         });
 
         return results;

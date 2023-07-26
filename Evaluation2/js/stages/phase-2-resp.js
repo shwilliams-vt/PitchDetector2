@@ -4,15 +4,15 @@ import Questionnaire from "../tools/questionnaire.js";
 
 const params = {};
 
-params.resource = "phase-1-resp";
+params.resource = "phase-2-resp";
 params.onStart = async function()
 {
 
-    const survey = new Questionnaire("phase-1-resp");
+    const survey = new Questionnaire("phase-2-resp");
 
     survey.onComplete = function(results) { 
 
-        EVAL.surveys.phase1 = results;
+        EVAL.surveys.phase2 = results;
 
         let button = document.getElementById("finish");
         button.addEventListener("click", EVAL.next);

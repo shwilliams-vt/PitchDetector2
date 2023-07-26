@@ -9,8 +9,24 @@ EVAL.progressInfo = document.getElementById("progress-info");
 EVAL.started = false;
 EVAL.stages = stages;
 
-const skip = 12;
-// const skip = 0;
+EVAL.surveys = {};
+EVAL.results = {};
+EVAL.canWhistle = true;
+
+EVAL.generateJSON = function()
+{
+    let obj = {};
+    obj.surveys = EVAL.surveys;
+    obj.results = EVAL.results;
+    obj.id = EVAL.id;
+    obj.canWhistle = EVAL.canWhistle;
+
+    return obj;
+}
+
+
+// const skip = 10;
+const skip = 0;
 
 async function skip_modules()
 {
@@ -31,7 +47,7 @@ function actual_start()
     else
     {
         actual_next()
-    }    
+    }
 }
 
 
@@ -54,11 +70,25 @@ async function actual_next()
     await EVAL.stages.next();
 }
 
-EVAL.next = function()
+EVAL.next = function(num)
 {
     if (EVAL.started == true)
     {
-        actual_next();
+
+        if (num !== undefined)
+        {
+            (async ()=> {
+                for (let i = 0; i < num; i++)
+                {
+                    await actual_next();
+                }
+            })()
+
+        }
+        else
+        {
+            actual_next();
+        }
     }
 }
 

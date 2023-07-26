@@ -20,17 +20,13 @@ params.onStart = async function()
         rounds: [
             "./rounds/official/phase1/round1.json",
             "./rounds/official/phase1/round2.json",
-            "./rounds/official/phase1/round3.json",
-            "./rounds/official/phase1/round4.json",
-            "./rounds/official/phase1/round5.json",
-            "./rounds/official/phase1/round6.json",
+            "./rounds/official/phase1/round3.json"
         ]
     };
 
     evaluator = new Evaluator(evalParams);
 
     evaluator.onComplete = async results => {
-        EVAL.results = {}
         EVAL.results.phase1 = results;
         // UTILS.downloadJSON(results);
         

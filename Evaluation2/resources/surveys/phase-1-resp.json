@@ -5,13 +5,7 @@
     [
         {
             "id" : 1,
-            "question" : "Why are you running?",
-            "type" : "textarea",
-            "validate" : "return (value.length >= 3)"
-        },
-        {
-            "id" : 2,
-            "question" : "Why are you walking?",
+            "question" : "Rate your comfort with using the NVVI tool with humming on a scale of 0 (terrible) to 5 (amazing) from left to right.",
             "type" : "slider",
             "extra-params" : 
             {
@@ -20,34 +14,10 @@
             }
         },
         {
-            "id" : 3,
-            "question" : "Why are you crawling?",
-            "type" : "list",
-            "extra-params" : 
-            {
-                "multiple" : false,
-                "options" :
-                [
-                    "Because",
-                    "Nunya",
-                    "Sorry"
-                ]
-            }
-        },
-        {
-            "id" : 4,
-            "question" : "Favorite Ice cream?",
-            "type" : "list",
-            "extra-params" : 
-            {
-                "multiple" : true,
-                "options" :
-                [
-                    "Choco",
-                    "Vanill",
-                    "Sherb"
-                ]
-            }
+            "id" : 2,
+            "type" : "textarea",
+            "question" : "Explain your experience using humming to control the NVVI tool. For example, is humming easy? Does it control the slider like you expect it to?",
+            "validate" : "return (value.length >= 3)"
         }
     ]
 }

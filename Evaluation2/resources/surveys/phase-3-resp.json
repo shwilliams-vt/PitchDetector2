@@ -1,0 +1,51 @@
+{
+    "title" : "Phase 3 Response",
+    "label" : "",
+    "questions" : 
+    [
+        {
+            "id" : 1,
+            "question" : "Which method did you use for this phase (Phase 3)?",
+            "type" : "list",
+            "extra-params" : 
+            {
+                "multiple" : false,
+                "options" :
+                [
+                    "Whistling",
+                    "Humming"
+                ]
+            }
+        },
+        {
+            "id" : 2,
+            "question" : "Did you regret your choice of whistling or humming using the tool (do you wish you would have chosen the other)?",
+            "type" : "list",
+            "extra-params" : 
+            {
+                "multiple" : false,
+                "options" :
+                [
+                    "Yes",
+                    "No"
+                ]
+            }
+        },
+        {
+            "id" : 3,
+            "type" : "textarea",
+            "question" : "Please provide any overall feedback on you experience with the tool.",
+            "validate" : "return (value.length >= 3)"
+        },
+        {
+            "id" : 4,
+            "type" : "slider",
+            "question" : "Rate the potential of this tool from 0 (low) to 5 (high), from left to right.",
+            "extra-params" :
+            {
+                "min" : 0,
+                "max" : 5
+            }
+        }
+    ]
+}
