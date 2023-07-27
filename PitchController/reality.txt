@@ -1,0 +1,16 @@
+You either hum (harmonics/formants) or whistle (pure tone + small noise)
+
+Humming will depend on vowel sound being used
+- some have more harmonics than others
+- some show harmonics lower than pitch being produced
+- realistically:
+-- not greater than 520 Hz 
+-- not less than 90Hz
+
+Whistling 
+- pretty uniform
+- range can vary from person to person
+- many people can't whistle
+- realistically:
+-- not greater than 2.6Khz
+-- not less than 600 Hz

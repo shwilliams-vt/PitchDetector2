@@ -1,5 +1,6 @@
 const ACF = "ACF";
 const HPS = "HPS";
+const EXP = "EXP";
 
 // import
 // { 
@@ -284,6 +285,92 @@ export default class FFTHelper
     }
 }
 
+export function standardDeviation(numArray) {
+    const mean = numArray.reduce((s, n) => s + n) / numArray.length;
+    const variance = numArray.reduce((s, n) => s + (n - mean) ** 2, 0) / (numArray.length - 1);
+    return Math.sqrt(variance);
+}
+
+export function approximateValue(numArray, location)
+{
+    let nearestbin = Math.round(location);
+    
+    if (nearestbin < 0)
+    {
+        nearestbin = 0;
+    }
+    if (nearestbin >= numArray.length)
+    {
+        nearestbin = numArray.length - 1;
+    }
+
+    // 3. Create letter vars corresponding to alpha, beta, gamma
+    let a = numArray[nearestbin-1];
+    let b = numArray[nearestbin];
+    let c = numArray[nearestbin+1];
+
+    // Handle cases 
+    if (isNaN(a))
+    {
+        a = (c - b) * (nearestbin-1);
+    }
+    if (isNaN(c))
+    {
+        c = (b - a) * (nearestbin+1);
+    }
+
+    // 4. Slope (coefficient of power 2 polynomial)
+    let m = 0.5 * (a - 2 * b + c);
+
+    // 5. Use equation to solve for peak bin
+    let peakbinoffset = 0.25 * ((a - c) / m);
+
+    // 6. Use equation to find interpolated peak bin value
+    let peakbinvalue = b - 0.25 * (a - c) * peakbinoffset;
+
+    // console.log(peakbinvalue)
+
+    // 7. Return the frequency
+    return m * Math.pow(location - (peakbinoffset + nearestbin), 2) + peakbinvalue;
+}
+
+export function widthFunction(numArray)
+{
+    let mean = 0, weight = 0, size = numArray.length;
+
+    for (let i = 0; i < size; i++)
+    {
+        mean += numArray[i];
+        weight += i * numArray[i];
+    }
+
+    let approxAvgPt = weight / mean;
+
+    let trash = 0;
+
+    
+    for (let i = 1; i < size; i++)
+    {
+        let j = approxAvgPt + i;
+        let k = approxAvgPt - i;
+
+        if (j < size)
+        {
+            let p = approximateValue(numArray, j);
+            trash += p / (size - i);
+        }
+
+        if (k >= 0)
+        {
+            let p = approximateValue(numArray, k)
+            trash += p / (size - i);
+        }
+    }
+    // console.log(approximateValue(numArray, approxAvgPt))
+
+    return trash;
+}
+
 // -- End helpers
 
 
@@ -528,6 +615,9 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             case ACF:
                 this.processACF();
                 break;
+            case EXP:
+                this.processEXP();
+                break;
             default:
                 // HPS
                 this.processHPS();
@@ -697,6 +787,91 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             this.timeOfLastTransient = Date.now();
             this.numTransients = 1;
         }
+    }
+
+    processEXP()
+    {
+        const minPitchVolume = 0.05;
+        
+        let sum = 0;
+        for (let i = 0; i < this.frameSize; i++)
+        {
+            let j = (this.internalBufferSize + this.internalBufferOffset + i - this.frameSize) % this.internalBufferSize;
+
+            sum += Math.abs(this.internalBuffer[j]);
+        }
+
+        let avg = sum / this.frameSize;
+
+        // console.log(avg > minPitchVolume);
+
+        if (avg < minPitchVolume)
+        {
+            // Report findings        
+            this.postProcess({
+                pitchInfo: {pitch: NaN, confidence:0}
+            });
+
+            return;
+        }
+
+        let pitch = 0;
+        let confidence = 1;
+
+        // Determine if whistle or humming by...
+        // Choice: Calculate standard deviation on power spectrum
+
+        const minDeviation = 0.05;
+        // 1. FFT
+        for (let i = 0; i < this.frameSize; i++)
+        {
+            let j = (this.internalBufferSize + this.internalBufferOffset + i - this.frameSize) % this.internalBufferSize;
+
+            this.ffthelper.fftBuffer[i] = this.internalBuffer[j];
+        }
+
+        // Perform FFT
+        this.ffthelper.fft();
+
+        // Collect Magnitudes
+        let HPSsize = this.frameSize / 14;
+
+        const magnitudeBuffer = new Float32Array(HPSsize);
+        for (let i = 0; i < HPSsize; i++)
+        {
+            magnitudeBuffer[i] = this.ffthelper.magnitude(i) + 0.1;
+        }
+
+        let max = Math.max(...magnitudeBuffer);
+        for (let i = 0; i < HPSsize; i++)
+        {
+            magnitudeBuffer[i] /= max;
+        }
+
+        // Band width
+        let width = widthFunction(magnitudeBuffer);
+
+        // console.log(sd > minDeviation);
+
+        // If the band width (not very great name perhaps) is wide enough
+        // (think similar to a distribution), then it is a voice or hum,
+        // otherwise it is a whistle
+
+        if (width > minDeviation)
+        {
+            console.log("hum")
+        }
+        else
+        {
+            console.log("whistle")
+        }
+
+
+        // Report findings        
+        this.postProcess({
+            spectrum: magnitudeBuffer,
+            pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
+        });
     }
 
     processHPS()
