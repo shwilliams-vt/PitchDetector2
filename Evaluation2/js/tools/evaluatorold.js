@@ -1,12 +1,18 @@
 import Round from "./round.js"
 
-async function parseRound(roundFile, callback)
+async function parseRound(roundFile, callback, numRounds)
 {
     let resp = await fetch(roundFile);
     let j = await resp.json();
+    j.metadata = 
+    {
+        numRounds: numRounds
+    };
 
     let round = new Round(j);
     round.onCompleteTest = callback;
+    
+
     return round;
 }
 
@@ -25,15 +31,17 @@ export default class Evaluator
 
         this.parameters = parameters;
         this.domElem = parameters.domElem;
+        this.domElem.classList.add("evaluation-tool")
 
     }
 
     async buildRounds()
     {
+        let numRounds = this.parameters.rounds.length;
         let scope = this;
-        for (let i = 0; i < this.parameters.rounds.length; i++)
+        for (let i = 0; i < numRounds; i++)
         {
-            let round = await parseRound(this.parameters.rounds[i], (results)=>scope._onCompleteTest(results));
+            let round = await parseRound(this.parameters.rounds[i], (results)=>scope._onCompleteTest(results), numRounds);
             scope.rounds.push(round);
         }
     }

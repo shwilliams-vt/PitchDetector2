@@ -31,6 +31,8 @@ export default class Round
         this.recordInterval = parameters.recordInterval;
         this.description = parameters.description || "An empty round description";
 
+        this.metadata = parameters.metadata || {};
+
         if (this.control == false)
         {
             this.pitchController = new PitchController(parameters.pitchControllerSettings);
@@ -43,10 +45,15 @@ export default class Round
             i++;
             scope.tests.push(parseTest(
                 {...test, 
-                    testNumber:i, 
                     recordInterval:this.recordInterval,
-                    roundTitle: scope.title,
-                    roundDescription: scope.description
+                    metadata:
+                    {
+                        roundTitle: scope.title,
+                        numRounds: scope.metadata.numRounds,
+                        testNumber:i, 
+                        numTests: parameters.tests.length,
+                        description: scope.description
+                    }
                 }, 
                 this.pitchController, this.control, (results)=>scope._onCompleteTest(results)));
         });

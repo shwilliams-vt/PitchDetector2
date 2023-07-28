@@ -15,11 +15,18 @@ function createSlider(args)
     return slider;
 }
 
-function createLabel(text)
+function createLabel(text, style)
 {
     let label = document.createElement("p");
-    label.innerText = text;
+    label.innerHTML = text;
     label.style.width = "100%";
+
+    if (style !== undefined)
+    {
+        Object.keys(style).forEach(key=>{
+            label.style[key] = style[key];
+        })
+    }
 
     return label;
 }
@@ -77,9 +84,10 @@ export default class Test
         this.metadata.min = min;
         this.metadata.max = max;
 
-        this.title = `${this.parameters.roundTitle}: Test ${this.parameters.testNumber}`;
+        this.title = `${this.parameters.metadata.roundTitle}/${this.parameters.metadata.numRounds}, 
+            Test ${this.parameters.metadata.testNumber}/${this.parameters.metadata.numTests}`;
 
-        let instructions = createLabel(`${this.title}. ${this.description}`);
+        let instructions = createLabel(`<span class='italic'>${this.title}.</span><br/><br/>${this.metadata.description}`);
         let controlSlider = createSlider({min: min, max: max, startValue: endValue});
         controlSlider.setAttribute("disabled", "true");
         let userSlider = createSlider({min: min, max: max, startValue: startValue});
