@@ -229,6 +229,7 @@ export default class Questionnaire
         status.innerText = "-/-";
 
         let btns = document.createElement("div");
+        this.btns = {prev: prev_btn, next: next_btn};
         btns.appendChild(prev_btn);
         btns.appendChild(next_btn);
 
@@ -260,7 +261,7 @@ export default class Questionnaire
     move(amt)
     {
 
-        if (this.currentQuestion + amt < 0 || this.currentQuestion + amt >= this.questions.length)
+        if (this.currentQuestion + amt < 0 ||this.currentQuestion + amt >= this.questions.length)
         {
             return;
         }
@@ -276,6 +277,21 @@ export default class Questionnaire
     {
         let q = this.questions[this.currentQuestion];
         q.visited = true;
+
+        if (this.currentQuestion == 0)
+        {
+            this.btns.prev.classList.add("no-nav");
+        }
+        else if (this.currentQuestion == this.questions.length - 1)
+        {
+            this.btns.next.classList.add("no-nav");
+        }
+        else
+        {
+            this.btns.prev.classList.remove("no-nav");
+            this.btns.next.classList.remove("no-nav");
+
+        }
 
         this.status.innerText = "Question " + (this.currentQuestion + 1) + "/" + this.questions.length;
         this.checkStatus();

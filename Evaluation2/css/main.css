@@ -261,6 +261,10 @@ a:hover
 {
     content: "* "
 }
+.questionnaire .no-nav
+{
+    background-color: grey;
+}
 
 #grant-mic
 {
