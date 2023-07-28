@@ -134,6 +134,71 @@ class Question
                 });
 
                 break;
+            case "likert":
+                this.form = document.createElement("form");
+                this.domElem.appendChild(this.form);
+
+                q.innerText = "Rate your agreement with the following statement: " + q.innerText;
+
+                let likertOptions = [
+                    "Strongly Disagree",
+                    "Disagree",
+                    "Neither Agree or Disagree",
+                    "Agree",
+                    "Strongly Agree"
+                ]
+
+                for (let i = 0; i < 5; i++)
+                {
+                    let o = document.createElement("p");
+                    o.style.marginBottom = "0px";
+                    o.style.marginTop = "2px";
+
+                    let input = document.createElement("input");
+                    input.setAttribute("type", "radio");
+                    input.setAttribute("name", "op")
+                    o.appendChild(input);
+
+                    let txt = document.createElement("span");
+                    txt.innerText = likertOptions[i];
+                    o.appendChild(txt);
+
+                    this.form.appendChild(o);
+
+                    
+                }
+
+                this.form.addEventListener("input", function(e) {
+
+                    let op = e.target.nextElementSibling.innerText;
+                    let val = 0;
+
+                    switch (op)
+                    {
+                        case "Strongly Disagree":
+                            val = 0
+                            break;
+                        case "Disagree":
+                            val = 1
+                            break;
+                        case "Neither Agree or Disagree":
+                            val = 2
+                            break;
+                        case "Agree":
+                            val = 3
+                            break;
+                        case "Strongly Agree":
+                            val = 4
+                            break;
+                        default:
+                            break;
+                    }
+
+                    scope.form.value = val;
+                    
+                    scope.callback(e);
+                });
+                break;
             default:
                 break;
         }
@@ -150,6 +215,8 @@ class Question
             case "slider":
                 return this.slider.value;
             case "list":
+                return this.form.value;
+            case "likert":
                 return this.form.value;
             default:
                 return undefined;

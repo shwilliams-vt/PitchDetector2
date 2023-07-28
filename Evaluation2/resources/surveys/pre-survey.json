@@ -5,43 +5,23 @@
     [
         {
             "id" : 1,
-            "question" : "Rate your background knowledge with NVVI tools from 0 (none) to 5 (a lot) from left to right.",
-            "type" : "slider",
-            "extra-params" : 
-            {
-                "min" : 0,
-                "max" : 5
-            }
+            "question" : "I have strong background knowledge in NVVI.",
+            "type" : "likert"
         },
         {
             "id" : 2,
-            "question" : "Rate your musical background (e.g. playing melodic instruments, singing) from 0 (minimal) to 5 (highly experienced) from left to right.",
-            "type" : "slider",
-            "extra-params" : 
-            {
-                "min" : 0,
-                "max" : 5
-            }
+            "question" : "I have a strong musical background (e.g. playing melodic instruments, singing).",
+            "type" : "likert"
         },
         {
             "id" : 3,
-            "question" : "Rate your pitch identification ability (i.e. perfect pitch) from 0 (minimal) to 5 (perfect pitch) from left to right.",
-            "type" : "slider",
-            "extra-params" : 
-            {
-                "min" : 0,
-                "max" : 5
-            }
+            "question" : "I have strong pitch identification ability (i.e. perfect pitch).",
+            "type" : "likert"
         },
         {
             "id" : 4,
-            "question" : "Rate your humming ability from 0 (inaccurate) to 5 (accurate, stable pitch) from left to right.",
-            "type" : "slider",
-            "extra-params" : 
-            {
-                "min" : 0,
-                "max" : 5
-            }
+            "question" : "I am proficient at humming/singing (with an accurate, stable pitch).",
+            "type" : "likert"
         },
         {
             "id" : 5,
@@ -65,13 +45,8 @@
         },
         {
             "id" : 7,
-            "question" : "If you can whistle, rate your whistling ability from 0 (inaccurate) to 5 (accurate, stable pitch) from left to right.",
-            "type" : "slider",
-            "extra-params" : 
-            {
-                "min" : 0,
-                "max" : 5
-            },
+            "question" : "(If you can whistle) I have strong whistling skills (with accurate, stable pitch).",
+            "type" : "likert",
             "optional" : true
         }
     ]

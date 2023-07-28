@@ -236,7 +236,6 @@ a:hover
 {
     height: 200px;
     overflow-x: hidden;
-    white-space: nowrap;
     overflow-y: hidden;
 }
 .questionnaire .qframe > div

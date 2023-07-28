@@ -55,7 +55,7 @@ export default
     next: async function()
     {
 
-        if (this.current_stage != null)
+        if (this.current_stage != null && this.current_stage !== undefined)
         {
             await this.current_stage.onComplete();
         }
