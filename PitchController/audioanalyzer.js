@@ -573,6 +573,10 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         this.transientWaiting = false;
         this.transientSilence = true;
 
+        // For generic audio
+        this.audioBuffer = new Float32Array(this.frameSize);
+        this.zeroCrossing = new Float32Array(this.frameSize);
+
         // For HPS
         this.HPSmagnitudeBuffer = new Float32Array(this.frameSize);
         this.HPScorrelationBuffer = new Float32Array(this.frameSize);
@@ -589,6 +593,9 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         // Fill buffers
         for (let i = 0; i < this.frameSize; i++)
         {
+            this.audioBuffer[i] = 0;
+            this.zeroCrossing[i] = 0;
+
             this.HPSmagnitudeBuffer[i] = 0;
             this.HPScorrelationBuffer[i] = 0;
 
@@ -865,12 +872,15 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
     processEXP()
     {
-        const minPitchVolume = 0.05;
+        const minPitchVolume = 0.01;
+        // const minPitchVolume = 0.05;
+        
 
         let sum = 0;
         for (let i = 0; i < this.frameSize; i++)
         {
             let j = (this.internalBufferSize + this.internalBufferOffset + i - this.frameSize) % this.internalBufferSize;
+            this.audioBuffer[i] = this.internalBuffer[j];
 
             sum += Math.abs(this.internalBuffer[j]);
         }
@@ -883,6 +893,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         {
             // Report findings
             this.postProcess({
+                spectrum: new Float32Array(this.frameSize),
                 pitchInfo: {pitch: NaN, confidence:0}
             });
 
@@ -908,7 +919,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         this.ffthelper.fft();
 
         // Collect Magnitudes
-        let HPSsize = this.frameSize / 14;
+        let HPSsize = Math.round(this.frameSize / 14);
 
         const magnitudeBuffer = new Float32Array(HPSsize);
         for (let i = 0; i < HPSsize; i++)
@@ -935,61 +946,127 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         {
             // console.log("hum")
 
-            this.processHPS();
-            return;
+            // this.processACF();
+            // this.processHPS();
+
+            // Zero cross then ACF
 
             // Set min and max frequency boundaries
-            // const minHumHz = 90;
-            // const maxHumHz = 520;
+            const minHumHz = 90;
+            const maxHumHz = 520;
 
-            // const minHumBin = Math.round(minHumHz / this.sampleRate * this.frameSize);
-            // const maxHumBin = Math.round(maxHumHz / this.sampleRate * this.frameSize);
+            const minHumBin = Math.round(minHumHz / this.sampleRate * this.frameSize);
+            const maxHumBin = Math.round(maxHumHz / this.sampleRate * this.frameSize);
 
-            // HPSsize = this.frameSize / 2;
-            // for (let i = 0; i < HPSsize; i++)
-            // {
-            //     this.HPSmagnitudeBuffer[i] = this.ffthelper.magnitude(i) + 0.1;
+            let positive = this.audioBuffer[0] > 0;
+            this.zeroCrossing[0] = 0;
 
-            //     if (i >= minHumBin && i < maxHumBin)
-            //     {
-            //         this.HPScorrelationBuffer[i] = 1;
-            //     }
-            //     else
-            //     {
-            //         this.HPScorrelationBuffer[i] = 0;
-            //     }
-            // }
+            for (let i = 1; i < this.frameSize - 1; i++)
+            {
+                let samp = this.audioBuffer[i];
+                if (positive && samp <= 0 || !positive && samp > 0)
+                {
+                    this.zeroCrossing[i] = 0;
+                    positive = !positive;
+                }
+                else
+                {
+                    this.zeroCrossing[i] = positive ? 1 : -1;
+                }
+            }
+            
+            // https://alexanderell.is/posts/tuner/
+            // Perform a quick root-mean-square to see if we have enough signal
+            var SIZE = this.zeroCrossing.length;
+            var sumOfSquares = 0;
+            for (var i = 0; i < SIZE; i++) {
+                var val = this.zeroCrossing[i];
+                sumOfSquares += val * val;
+            }
+            var rootMeanSquare = Math.sqrt(sumOfSquares / SIZE)
+            if (rootMeanSquare < 0.01) {
+                // return -1;
+            }
+            
+            // Find a range in the buffer where the values are below a given threshold.
+            var r1 = 0;
+            var r2 = SIZE - 1;
+            var threshold = 0.2;
+            
+            // Walk up for r1
+            for (var i = 0; i < SIZE / 2; i++) {
+                if (Math.abs(this.zeroCrossing[i]) < threshold) {
+                r1 = i;
+                break;
+                }
+            }
+            
+            // Walk down for r2
+            for (var i = 1; i < SIZE / 2; i++) {
+                if (Math.abs(this.zeroCrossing[SIZE - i]) < threshold) {
+                r2 = SIZE - i;
+                break;
+                }
+            }
+            
+            // Trim the buffer to these ranges and update SIZE.
+            let buffer = this.zeroCrossing.slice(r1, r2);
+            SIZE = buffer.length
+            
+            // Create a new array of the sums of offsets to do the autocorrelation
+            var c = new Array(SIZE).fill(0);
+            // For each potential offset, calculate the sum of each buffer value times its offset value
+            for (let i = 0; i < SIZE; i++) {
+                for (let j = 0; j < SIZE - i; j++) {
+                c[i] = c[i] + buffer[j] * buffer[j+i]
+                }
+            }
+            
+            // Find the last index where that value is greater than the next one (the dip)
+            var d = 0;
+            while (c[d] > c[d+1]) {
+                d++;
+            }
+            
+            // Iterate from that index through the end and find the maximum sum
+            var maxValue = -1;
+            var maxIndex = -1;
+            for (var i = d; i < SIZE; i++) {
+                if (c[i] > maxValue) {
+                maxValue = c[i];
+                maxIndex = i;
+                }
+            }
+            
+            var T0 = maxIndex;
+            
+            // Not as sure about this part, don't @ me
+            // From the original author:
+            // interpolation is parabolic interpolation. It helps with precision. We suppose that a parabola pass through the
+            // three points that comprise the peak. 'a' and 'b' are the unknowns from the linear equation system and b/(2a) is
+            // the "error" in the abscissa. Well x1,x2,x3 should be y1,y2,y3 because they are the ordinates.
+            var x1 = c[T0 - 1];
+            var x2 = c[T0];
+            var x3 = c[T0 + 1]
+            
+            var a = (x1 + x3 - 2 * x2) / 2;
+            var b = (x3 - x1) / 2
+            if (a) {
+                T0 = T0 - b / (2 * a);
+            }
+            
+            pitch = this.sampleRate/T0;
 
-            // for (let i = 0; i < this.HPSharmonicCount; i++)
-            // {
-            //     for (let j = minHumBin; j < maxHumBin; j++)
-            //     {
-            //         let k = j * Math.pow(2,i);
-            //         let tau = 1;
+            confidence = rootMeanSquare;
+            confidence *= (0.8 + 0.2 * (1 - pitch / maxHumHz));
+            confidence *= (0.8 + 0.2 * (1 - (width - 0.5) / 0.25) / 1.3);
+            confidence = Math.min(Math.max(0, confidence), 1);            
 
-            //         if (k < this.frameSize / 2)
-            //         {
-            //             tau = this.HPSmagnitudeBuffer[k];
-            //         }
-
-            //         this.HPScorrelationBuffer[j] *= tau;
-            //     }
-            // }
-
-            // max = Math.max(...this.HPScorrelationBuffer);
-            // for (let i = 0; i < this.frameSize / 2; i++)
-            // {
-            //     this.HPScorrelationBuffer[i] /= max;
-            // }
-
-            // pitch = getNthParabolicApproximatePeakBin(this.HPScorrelationBuffer, 1) * this.sampleRate / this.frameSize;
-            // confidence = 1.0;
-
-            // // Report findings
-            // this.postProcess({
-            //     spectrum: this.HPScorrelationBuffer,
-            //     pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
-            // });
+            // Report findings
+            this.postProcess({
+                spectrum: this.zeroCrossing,
+                pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
+            });
 
         }
         else
@@ -1025,6 +1102,8 @@ class WorkletAnalyzer extends AudioWorkletProcessor
                 pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
             });
         }
+
+        
     }
 
     processHPS()
@@ -1139,16 +1218,53 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         {
             let j = (this.internalBufferSize + this.internalBufferOffset + i - this.frameSize) % this.internalBufferSize;
 
-            this.ACFbuffer[i] = this.internalBuffer[j] * this.ffthelper.hannwindow(i, this.frameSize);
+            this.ACFbuffer[i] = this.internalBuffer[j]// * this.ffthelper.hannwindow(i, this.frameSize);
             this.ACFpeaksBuffer[i] = 0;
         }
 
+        function calculateAutocorrelation() {
+            console.log(this)
+            
+          }
+
+        function findPitchBin() {
+            
+        }
+
+        const n = this.ACFbuffer.length;
+          
+        for (let lag = 0; lag < n; lag++) {
+            for (let i = 0; i < n - lag; i++) {
+            this.ACFpeaksBuffer[lag] += this.ACFbuffer[i] * this.ACFbuffer[i + lag];
+            }
+        }
+
+        const s = 25;
+        let peakIndex = s;
+        let peakValue = this.ACFpeaksBuffer[s];
+        
+        // Find the highest peak in the autocorrelation array
+        for (let i = s + 1; i < n; i++) {
+            if (this.ACFpeaksBuffer[i] > peakValue) {
+            peakValue = this.ACFpeaksBuffer[i];
+            peakIndex = i;
+            }
+        }
+
+       
+    
+        let pitch = this.sampleRate / getParabolicBinApproximation(this.ACFpeaksBuffer, peakIndex);
         // Easy function:
-        for (let lag = 0; lag < this.frameSize; lag++)
+        /*for (let lag = 0; lag < this.frameSize; lag++)
         {
             for (let i = 0; i < this.frameSize; i++)
             {
-                this.ACFpeaksBuffer[this.frameSize - 1 - lag] += this.ACFbuffer[i] * this.ACFbuffer[(this.frameSize + i - lag) % this.frameSize];
+                // MOD?
+                let n = (this.frameSize + i - lag);
+                if (n < this.frameSize && n >= 0)
+                {
+                    this.ACFpeaksBuffer[this.frameSize - 1 - lag] += this.ACFbuffer[i] * this.ACFbuffer[n];
+                }
             }
         }
 
@@ -1157,9 +1273,9 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         {
             if (this.ACFpeaksBuffer[i] < this.ACFthreshold)
             {
-                this.ACFpeaksBuffer[i] = 0;
+                // this.ACFpeaksBuffer[i] = 0;
             }
-        }
+        }*/
 
         // Normalize peaks
         let max = Math.max(...this.ACFpeaksBuffer);
@@ -1172,12 +1288,12 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             this.ACFpeaksBuffer[i] /= max;
         }
 
-        // Now calculate avg distance between peaks
+        /*// Now calculate avg distance between peaks
 
         // Pitch is the sample rate divided by the period (in bins)
         let firstpeakbin = getNthParabolicApproximatePeakBin(this.ACFpeaksBuffer, 1);
         let pitch = this.sampleRate / (firstpeakbin + 1) ;
-
+        */
         if (pitch < 0)
         {
             pitch = 0;
@@ -1215,7 +1331,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
         // Report findings
         this.postProcess({
-            spectrum: this.ACFpeaksBuffer.slice(0,this.frameSize/2),
+            spectrum: this.ACFpeaksBuffer,
             pitchInfo: {pitch: Math.round(pitch), confidence:confidence},
             peaks:numbands
         });
