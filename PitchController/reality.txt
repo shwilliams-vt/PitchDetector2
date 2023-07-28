@@ -14,3 +14,10 @@ Whistling
 - realistically:
 -- not greater than 2.6Khz
 -- not less than 600 Hz
+
+Now a problem that comes up is sometimes people's voices are pure and when they
+hum they register as a whistle. Sometimes, this is less than the 600 Hz guard.
+So we choose to lower whistling to around 300 Hz, where formants really prevail. src
+
+We need to balance change by frequency. Like high frequencies from whistling should change
+proportional to low frequency changes in humming

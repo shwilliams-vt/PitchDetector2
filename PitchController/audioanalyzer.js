@@ -2,13 +2,15 @@ const ACF = "ACF";
 const HPS = "HPS";
 const EXP = "EXP";
 
+const window = {};
+
 // import
-// { 
-//     getMaxPeakBin, 
+// {
+//     getMaxPeakBin,
 //     getNthPeakBin,
 //     getMaxParabolicApproximatePeakBin,
 //     getNthParabolicApproximatePeakBin,
-//     getParabolicApproximateFrequency, 
+//     getParabolicApproximateFrequency,
 //     getParabolicApproximatePower
 // } from "./helpers.js";
 // import FFTHelper from "./ffthelper.js";
@@ -115,7 +117,7 @@ export function getNthParabolicApproximatePeakBin(spectrum, n)
 export function getParabolicApproximateFrequency(spectrum, sampleRate)
 {
     // Use parabolic interpolation
-    // https://ccrma.stanford.edu/~jos/sasp/Quadratic_Interpolation_Spectral_Peaks.html    
+    // https://ccrma.stanford.edu/~jos/sasp/Quadratic_Interpolation_Spectral_Peaks.html
 
     // 1. Get peak approximation bin
     let interpolatedbin = getParabolicApproximateBin(spectrum, getParabolicApproximateBin(spectrum));
@@ -164,7 +166,7 @@ export default class FFTHelper
         for (let i = 0; i < Object.keys(parameters).length; i++)
         {
             let key = Object.keys(parameters)[i];
-            this[key] = parameters[key]; 
+            this[key] = parameters[key];
         }
 
         this.initialize();
@@ -213,7 +215,7 @@ export default class FFTHelper
             for (let j = 0; j < logSize; j++) {
                 reversed |= !!((1 << j) & i) << (logSize - j - 1);
             }
-            
+
             if (reversed >= i) {
 
                 let tmp = this.fftBuffer[i];
@@ -238,7 +240,7 @@ export default class FFTHelper
             let butterflySeperation = Math.pow(2,stage);
 
             // distance between lo and hi elements in butterfly
-            let butterflyWidth = butterflySeperation / 2; 
+            let butterflyWidth = butterflySeperation / 2;
 
             // For each butterfly separation
             for (let j = 0; j < this.fftSize; j += butterflySeperation) {
@@ -294,7 +296,7 @@ export function standardDeviation(numArray) {
 export function approximateValue(numArray, location)
 {
     let nearestbin = Math.round(location);
-    
+
     if (nearestbin < 0)
     {
         nearestbin = 0;
@@ -309,7 +311,7 @@ export function approximateValue(numArray, location)
     let b = numArray[nearestbin];
     let c = numArray[nearestbin+1];
 
-    // Handle cases 
+    // Handle cases
     if (isNaN(a))
     {
         a = (c - b) * (nearestbin-1);
@@ -334,7 +336,7 @@ export function approximateValue(numArray, location)
     return m * Math.pow(location - (peakbinoffset + nearestbin), 2) + peakbinvalue;
 }
 
-export function widthFunction(numArray)
+export function getXPositionOfAvg(numArray)
 {
     let mean = 0, weight = 0, size = numArray.length;
 
@@ -346,9 +348,81 @@ export function widthFunction(numArray)
 
     let approxAvgPt = weight / mean;
 
+    return approxAvgPt;
+}
+
+export function getParabolicBinApproximation(spectrum, bin)
+{
+    // 2. Create letter vars corresponding to alpha, beta, gamma
+    let a = spectrum[bin-1];
+    let b = spectrum[bin];
+    let c = spectrum[bin+1];
+
+    // 3. Slope
+    let m = 0.5 * (a - 2 * b + c);
+
+    // 3. Use equation to find interpolated bin value
+    let interpolatedbin = 0.25 * ((a - c) / m) + bin;
+
+    return interpolatedbin;
+}
+
+export function isPeak(array, bin)
+{
+    return (array[bin] > array[bin + 1]) && (array[bin] > array[bin - 1]);
+}
+
+export function getClosestPeakBin(numArray, position)
+{
+    // Find min or max left and right, prioritize right
+    let size = numArray.length;
+    let roundedPos = Math.round(position);
+    let peakLocation = roundedPos;
+
+
+    for (let i = 0; i < size; i++)
+    {
+        let j = roundedPos + i;
+        let k = roundedPos - i;
+
+        if (j < size - 1)
+        {
+            if (isPeak(numArray, j))
+            {
+                peakLocation = j;
+                break;
+            }
+
+            if (j == roundedPos)
+            {
+                // First case but we check anyway
+                continue;
+            }
+        }
+
+        if (k > 0)
+        {
+            if (isPeak(numArray, k))
+            {
+                peakLocation = k;
+                break;
+            }
+        }
+    }
+
+    // return approximateValue(numArray, peakLocation);
+    return peakLocation;
+}
+
+export function widthFunction(numArray)
+{
+
+    let size = numArray.length;
+    let approxAvgPt = getXPositionOfAvg(numArray);
+
     let trash = 0;
 
-    
+
     for (let i = 1; i < size; i++)
     {
         let j = approxAvgPt + i;
@@ -398,7 +472,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         // The processing mode/algorithm for pitch detection
         this.mode = HPS;
         // The rate in samples to process at
-        this.processingRate = 256; 
+        this.processingRate = 256;
         // Should initially start at 0
         this.internalBufferOffset = 0;
         // Used for determining when to process
@@ -419,7 +493,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         this.numTransientsToTrigger = 2;
         // The current number of transients considered (internal use only)
         this.numTransients = 0;
-        // The period of time to listen for consecutive transient callbacks (s) 
+        // The period of time to listen for consecutive transient callbacks (s)
         this.transientListenPeriod = 2.0;
         // the time of the last transient detected
         this.timeOfLastTransient = Date.now();
@@ -451,7 +525,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         for (let i = 0; i < Object.keys(parameters.processorOptions).length; i++)
         {
             let key = Object.keys(parameters.processorOptions)[i];
-            this[key] = parameters.processorOptions[key]; 
+            this[key] = parameters.processorOptions[key];
         }
 
         // Set message settings
@@ -590,7 +664,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
         // Move forward offset
         this.internalBufferOffset = (oldInternalBufferOffset + input.length) % this.internalBufferSize;
-        
+
         // Required
         return true;
     }
@@ -634,7 +708,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         // Would look like a sine wave in the frequency domain
 
         // ... TBD
-        
+
         // OR just detect peaks in time domain by dividing into a few windows based on
         // the n ms transient and find the probability that a transient is detected.
 
@@ -707,9 +781,9 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             avgmax = 1;
         }
 
-        // Find "prob" a transient occurred 
+        // Find "prob" a transient occurred
         let probabability = 1 - avgmax;
-        
+
         if (probabability > this.transientThreshold)
         {
 
@@ -754,7 +828,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
         // No transient detected
         return false;
-        
+
     }
 
     ontransient()
@@ -777,7 +851,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
                 // Change transient silence flag
                 this.transientSilence = !this.transientSilence;
 
-                this.port.postMessage({transientSilence:this.transientSilence});        
+                this.port.postMessage({transientSilence:this.transientSilence});
                 this.numTransients = 0;
                 this.timeOfLastTransient = 0;
             }
@@ -792,7 +866,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
     processEXP()
     {
         const minPitchVolume = 0.05;
-        
+
         let sum = 0;
         for (let i = 0; i < this.frameSize; i++)
         {
@@ -807,7 +881,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
         if (avg < minPitchVolume)
         {
-            // Report findings        
+            // Report findings
             this.postProcess({
                 pitchInfo: {pitch: NaN, confidence:0}
             });
@@ -816,12 +890,12 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         }
 
         let pitch = 0;
-        let confidence = 1;
+        let confidence = 0;
 
         // Determine if whistle or humming by...
         // Choice: Calculate standard deviation on power spectrum
 
-        const minDeviation = 0.05;
+        const minDeviation = 0.055;
         // 1. FFT
         for (let i = 0; i < this.frameSize; i++)
         {
@@ -855,27 +929,107 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
         // If the band width (not very great name perhaps) is wide enough
         // (think similar to a distribution), then it is a voice or hum,
-        // otherwise it is a whistle
+        // otherwise it "is" a whistle (for the sake of processing a pure tone)
 
         if (width > minDeviation)
         {
-            console.log("hum")
+            // console.log("hum")
+
+            this.processHPS();
+            return;
+
+            // Set min and max frequency boundaries
+            // const minHumHz = 90;
+            // const maxHumHz = 520;
+
+            // const minHumBin = Math.round(minHumHz / this.sampleRate * this.frameSize);
+            // const maxHumBin = Math.round(maxHumHz / this.sampleRate * this.frameSize);
+
+            // HPSsize = this.frameSize / 2;
+            // for (let i = 0; i < HPSsize; i++)
+            // {
+            //     this.HPSmagnitudeBuffer[i] = this.ffthelper.magnitude(i) + 0.1;
+
+            //     if (i >= minHumBin && i < maxHumBin)
+            //     {
+            //         this.HPScorrelationBuffer[i] = 1;
+            //     }
+            //     else
+            //     {
+            //         this.HPScorrelationBuffer[i] = 0;
+            //     }
+            // }
+
+            // for (let i = 0; i < this.HPSharmonicCount; i++)
+            // {
+            //     for (let j = minHumBin; j < maxHumBin; j++)
+            //     {
+            //         let k = j * Math.pow(2,i);
+            //         let tau = 1;
+
+            //         if (k < this.frameSize / 2)
+            //         {
+            //             tau = this.HPSmagnitudeBuffer[k];
+            //         }
+
+            //         this.HPScorrelationBuffer[j] *= tau;
+            //     }
+            // }
+
+            // max = Math.max(...this.HPScorrelationBuffer);
+            // for (let i = 0; i < this.frameSize / 2; i++)
+            // {
+            //     this.HPScorrelationBuffer[i] /= max;
+            // }
+
+            // pitch = getNthParabolicApproximatePeakBin(this.HPScorrelationBuffer, 1) * this.sampleRate / this.frameSize;
+            // confidence = 1.0;
+
+            // // Report findings
+            // this.postProcess({
+            //     spectrum: this.HPScorrelationBuffer,
+            //     pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
+            // });
+
         }
         else
         {
-            console.log("whistle")
+            // console.log("whistle")
+
+            // Set min and max frequency boundaries
+            // const minWhistleHz = 600;
+            const minWhistleHz = 350;
+            const maxWhistleHz = 2600;
+
+            const minWhistleBin = minWhistleHz / this.sampleRate * this.frameSize;
+            const maxWhistleBin = maxWhistleHz / this.sampleRate * this.frameSize;
+
+            for (let i = 0; i < HPSsize; i++)
+            {
+                if (i < minWhistleBin || i > maxWhistleBin)
+                {
+                    magnitudeBuffer[i] = 0;
+                }
+            }
+
+            // Find closest peak to avg freq in pure tone
+            let avgXPos = getXPositionOfAvg(magnitudeBuffer);
+            let approxPeakBin = getClosestPeakBin(magnitudeBuffer, avgXPos);
+
+            pitch = getParabolicBinApproximation(magnitudeBuffer, approxPeakBin) * this.sampleRate / this.frameSize;
+            confidence = 1 - (2 * Math.abs(width - minDeviation));
+
+            // Report findings
+            this.postProcess({
+                spectrum: magnitudeBuffer,
+                pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
+            });
         }
-
-
-        // Report findings        
-        this.postProcess({
-            spectrum: magnitudeBuffer,
-            pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
-        });
     }
 
     processHPS()
     {
+
         // For HPS, collect samples up to offset, window them, then fft
         for (let i = 0; i < this.frameSize; i++)
         {
@@ -898,6 +1052,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         // Set our HPS resolution to be frameSize / 2
         // from 50 to 1000 Hz
         let start = 50, end = 1000;
+
         for (let i = 0; i < HPSsize; i++)
         {
             // Our selected sampling frequencies from 50 - 1000 Hz
@@ -910,9 +1065,10 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             {
                 tau *= getParabolicApproximatePower(this.HPSmagnitudeBuffer, this.sampleRate, w * scalefactor);
             }
-            
+
             this.HPScorrelationBuffer[i] = tau;
         }
+        // console.log(this.HPSmagnitudeBuffer[0])
 
         // Normalize first half
         let max = Math.max(...this.HPScorrelationBuffer);
@@ -923,8 +1079,32 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         }
 
         // Get a polynomic interpolated value of peak bin
-        let peakbin = getMaxParabolicApproximatePeakBin(this.HPScorrelationBuffer); 
+        // let peakbin = getMaxParabolicApproximatePeakBin(this.HPScorrelationBuffer);
+        // let peakbin = getClosestPeakBin(this.HPScorrelationBuffer, HPSsize - 1);
 
+        // We wil lfilter out low harmics with a gate
+        const filterGate = 0.3;
+        for (let w = 0; w < HPSsize; w++)
+        {
+            if (this.HPScorrelationBuffer[w] < filterGate)
+            {
+                this.HPScorrelationBuffer[w] = 0;
+            }
+        }
+
+        // Then we will check if harmonics below are bigger and if so rule self out
+        for (let w = 0; w < HPSsize; w++)
+        {
+            let j = HPSsize - 1 - w;
+            let below = j / 2;
+            if (below > 0 && this.HPScorrelationBuffer[below] > this.HPScorrelationBuffer[j])
+            {
+                this.HPScorrelationBuffer[j] = 0;
+            }
+        }
+
+        let peakbin = getParabolicBinApproximation(this.HPScorrelationBuffer, getClosestPeakBin(this.HPScorrelationBuffer, HPSsize - 2));
+        // let peakbin = getMaxParabolicApproximatePeakBin(this.HPScorrelationBuffer);
         // Convert to Hz
         let pitch = peakbin / HPSsize * (end - start) + start;
 
@@ -944,14 +1124,14 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         }
         confidence = 1 - (numbinsoverthresh - width) / (HPSsize - width);
 
-        // Report findings        
+        // Report findings
         this.postProcess({
-            spectrum: this.HPScorrelationBuffer, 
+            spectrum: this.HPScorrelationBuffer,
             pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
         });
 
     }
-    
+
     processACF()
     {
         // For ACF, collect samples up to offset, window them
@@ -963,7 +1143,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             this.ACFpeaksBuffer[i] = 0;
         }
 
-        // Easy function: 
+        // Easy function:
         for (let lag = 0; lag < this.frameSize; lag++)
         {
             for (let i = 0; i < this.frameSize; i++)
@@ -1033,9 +1213,9 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         confidence = 1 - (confidence / (2 * numbands));
         confidence = confidence * 10 - 9;
 
-        // Report findings        
+        // Report findings
         this.postProcess({
-            spectrum: this.ACFpeaksBuffer.slice(0,this.frameSize/2), 
+            spectrum: this.ACFpeaksBuffer.slice(0,this.frameSize/2),
             pitchInfo: {pitch: Math.round(pitch), confidence:confidence},
             peaks:numbands
         });
@@ -1046,9 +1226,9 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
         // Here we modify the report to include the smoothness and precision parameters
         // Note that we don't want to mess with OG data to store in reports, i.e. averages
-        // Instead, we want to store the accurate pitch and confidence in a report and 
+        // Instead, we want to store the accurate pitch and confidence in a report and
         // send the adjusted report to user
-        
+
         // If pitch is NaN confidence is 0
         if (isNaN(report.pitchInfo.pitch))
         {
@@ -1087,5 +1267,5 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         this.port.postMessage(report);
     }
 }
-  
+
 registerProcessor("worklet-analyzer", WorkletAnalyzer);

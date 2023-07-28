@@ -57,17 +57,23 @@ class Session
         // The initiale pitch (in Hz, all in Hz)
         this.startingpitch = initialpitch;
         // The current pitch offset
+        this.currentoffsethz = 0;
         this.currentoffset = 0;
         // The last pitch before current
         this.lastpitch = initialpitch;
         // The difference between the current pitch and the last pitch
+        this.deltapitchhz = 0;
         this.deltapitch = 0;
     }
 
     update(newpitch)
     {
-        this.currentoffset = newpitch - this.startingpitch;
-        this.deltapitch = newpitch - this.lastpitch;        
+        this.currentoffsethz = newpitch - this.startingpitch;
+        this.deltapitchhz = newpitch - this.lastpitch;
+
+        this.currentoffset = 12 * Math.log2(newpitch / this.startingpitch);
+        this.deltapitch = 12 * Math.log2(newpitch / this.lastpitch);    
+
         this.lastpitch = newpitch;
     }
                     

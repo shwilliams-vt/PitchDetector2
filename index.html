@@ -15,6 +15,8 @@
     <br><br>
     <input id="freq" type="range" max="440" min="50" oninput="modifyFreq()">
     <br><br>
+    <div id="offset"></div>
+    <br><br>
     <div id="detected"></div>
     <br><br>
     <div id="spectrum" style="min-height:50px"></div>
@@ -56,12 +58,13 @@
         {
             if ("pitchInfo" in e.data)
             {
+                offset.innerHTML = "Offset: " + e.data.session.currentoffset + ", Delta: " + e.data.session.deltapitch;
                 detected.innerHTML = "Actual: " + slider.value + ", Detected: " + (e.data.pitchInfo.pitch) + "<br>Confidence: " + e.data.pitchInfo.confidence;
             }
 
             let session = e.data.session;
             let h = block.getBoundingClientRect().height;
-            h += session.deltapitch;
+            h += session.deltapitch * 20;
 
             block.style.height = h + "px";
         }
