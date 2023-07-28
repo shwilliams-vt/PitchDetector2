@@ -66,13 +66,18 @@ class Session
         this.deltapitch = 0;
     }
 
-    update(newpitch)
+    update(newpitch, weight)
     {
         this.currentoffsethz = newpitch - this.startingpitch;
         this.deltapitchhz = newpitch - this.lastpitch;
 
-        this.currentoffset = 12 * Math.log2(newpitch / this.startingpitch);
-        this.deltapitch = 12 * Math.log2(newpitch / this.lastpitch);    
+        if (weight === undefined)
+        {
+            weight = 1.0;
+        }
+
+        this.currentoffset = weight * 12 * Math.log2(newpitch / this.startingpitch);
+        this.deltapitch = weight * 12 * Math.log2(newpitch / this.lastpitch);    
 
         this.lastpitch = newpitch;
     }
@@ -102,6 +107,9 @@ export default class PitchController
         // Indicating a "session"
         // Meaning a pitch has been detected
         this.insession = false;
+
+        // Weight to multiply by
+        this.weight = 1.0;
 
         // Use transient detection for enabled/disabled
         this.useTransientToggle = true;
@@ -158,6 +166,10 @@ export default class PitchController
         if ("useTransientToggle" in parameters)
         {
             this.useTransientToggle = parameters.useTransientToggle;
+        }
+        if ("weight" in parameters)
+        {
+            this.weight = parameters.weight;
         }
 
         // Get the Pitch Controller Directory
@@ -415,7 +427,7 @@ export default class PitchController
                 else
                 {
                     // Update our current session
-                    this.session.update(smoothedPitch);
+                    this.session.update(smoothedPitch, this.weight);
                 }
                 e.data.session = this.session;
 

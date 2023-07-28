@@ -7,11 +7,12 @@
     {
         "frameSize": 1024,
         "sampleRate": 44100,
-        "processingMode": "ACF",
+        "processingMode": "EXP",
         "smoothness": 40,
         "precision": 1,
         "transientWindowTime": 370,
-        "processingRate": 512
+        "processingRate": 512,
+        "weight": 25 
     },
     "tests": [
         {
