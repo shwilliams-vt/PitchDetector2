@@ -41,6 +41,12 @@ function getFrequencyFromSpectrum(spectrum, sampleRate)
     return interpolatedbin / (spectrum.length) * sampleRate;
 }
 
+function round(num, places)
+{
+    let pow10 = Math.pow(10, places);
+    return Math.round(num * pow10) / pow10;
+}
+
 class Report
 {
     constructor(parameters)
@@ -68,16 +74,16 @@ class Session
 
     update(newpitch, weight)
     {
-        this.currentoffsethz = newpitch - this.startingpitch;
-        this.deltapitchhz = newpitch - this.lastpitch;
+        this.currentoffsethz = round(newpitch - this.startingpitch, 2);
+        this.deltapitchhz = round(newpitch - this.lastpitch, 2);
 
         if (weight === undefined)
         {
             weight = 1.0;
         }
 
-        this.currentoffset = weight * 12 * Math.log2(newpitch / this.startingpitch);
-        this.deltapitch = weight * 12 * Math.log2(newpitch / this.lastpitch);    
+        this.currentoffset = round(weight * 12 * Math.log2(newpitch / this.startingpitch), 2);
+        this.deltapitch = round(weight * 12 * Math.log2(newpitch / this.lastpitch), 2);    
 
         this.lastpitch = newpitch;
     }
@@ -470,8 +476,8 @@ export default class PitchController
             {
                 // Pitch has been detected (in session)
 
-                pitchDetected.innerHTML = " Pitch Detected (Hz): ";
-                pitchNumber.innerHTML = e.data.session.lastpitch + " | ";
+                pitchDetected.innerHTML = "";
+                pitchNumber.innerHTML = e.data.session.lastpitch + " Hz | ";
                 pitchNumber.innerHTML += (e.data.session.currentoffset > 0) ? "+" : "";
                 pitchNumber.innerHTML += e.data.session.currentoffset;
 
@@ -484,7 +490,7 @@ export default class PitchController
             {
                 // Pitch has NOT been detected (NOT in session)
 
-                spinning.innerHTML = "highlight_off";
+                spinning.innerHTML = "hearing";
                 pitchDetected.innerHTML = "Listening...";
                 pitchNumber.innerHTML = "";
                 spinning.style.transform = `scale(1.0)`;
@@ -496,14 +502,16 @@ export default class PitchController
                 {
                     // Turning on tool
                     status.innerHTML = "ON";
-                    main.style.background = "darkgreen";
+                    main.classList.add("on");
+                    // main.style.background = "darkgreen";
                     pitchDetected.style.display = "inline"
                     pitchNumber.style.display = "inline"
                 }
                 else
                 {
                     // Turning off tool
-                    main.style.background = "maroon";
+                    // main.style.background = "maroon";
+                    main.classList.remove("on");
                     status.innerHTML = "OFF"
                     spinning.innerHTML = "highlight_off";
                     pitchDetected.innerHTML = "";
@@ -564,7 +572,7 @@ export default class PitchController
     {
         const main = document.createElement("div");
         main.id = "tool";
-        main.style.background = "maroon";
+        // main.style.background = "maroon";
 
         const name = document.createElement("span");
         name.innerText = "NVVI:"
