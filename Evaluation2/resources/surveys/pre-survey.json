@@ -33,6 +33,19 @@
             }
         },
         {
+            "id" : "voice-type",
+            "question" : "In which of the following categories would you label the average pitch of your speaking voice?",
+            "type" : "list",
+            "extra-params" : 
+            {
+                "options" :[
+                    "Low",
+                    "Medium",
+                    "High"
+                ]
+            }
+        },
+        {
             "id" : "nvvi-background",
             "question" : "I have strong background knowledge in NVVI.",
             "type" : "likert"

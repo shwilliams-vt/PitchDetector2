@@ -8,6 +8,8 @@ import * as VIZ from "../tools/viz/viz.js"
 
 const params = {};
 
+let listener = false;
+
 params.resource = "phase-4-eval";
 
 let evaluator;
@@ -30,31 +32,34 @@ params.onStart = async function()
         EVAL.results.phase4 = results;
         // UTILS.downloadJSON(results);
         
-        let button = document.getElementById("finish");
-        button.addEventListener("click", EVAL.next);
-        button.innerHTML = "Continue >>";
-        button.style.background = "darkred";
+        if (listener == false)
+        {
+            let button = document.getElementById("finish");
+            button.addEventListener("click", EVAL.next);
+            button.innerHTML = "Continue >>";
+            button.style.background = "darkred";
 
-        let rounds = Object.keys(results);
+            let rounds = Object.keys(results);
 
-        let label = document.createElement("h3");
-        label.innerText = "Phase 4 - Results";
+            let label = document.createElement("h3");
+            label.innerText = "Phase 4 - Results";
 
-        let resultsTable = document.createElement("div");
-        resultsTable.style.maxHeight = "250px";
-        resultsTable.style.height = "250px";
-        resultsTable.style.display = "inline-block";
+            let resultsTable = document.createElement("div");
+            resultsTable.style.maxHeight = "250px";
+            resultsTable.style.height = "250px";
+            resultsTable.style.display = "inline-block";
 
-        document.getElementById("phase4").appendChild(label);
-        document.getElementById("phase4").appendChild(resultsTable);
+            document.getElementById("phase4").appendChild(label);
+            document.getElementById("phase4").appendChild(resultsTable);
 
-        (async () => {
-            await UTILS.waitOneFrame()
-            resultsTable.appendChild(VIZ.drawEvaluation(results, false));
-        })()
+            (async () => {
+                await UTILS.waitOneFrame()
+                resultsTable.appendChild(VIZ.drawEvaluation(results, false));
+            })()
 
-        document.getElementById("tool-wrapper").innerHTML = "";
-        
+            document.getElementById("tool-wrapper").innerHTML = "";
+            listener = true;
+        }
     }
 
 

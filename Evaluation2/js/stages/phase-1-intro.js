@@ -11,7 +11,6 @@ let controller;
 params.resource = "phase-1-intro";
 params.onStart = async function()
 {
-
     const demo = document.getElementById("demo");
     const slider = new Slider({
         min:"0",
@@ -52,8 +51,8 @@ params.onStart = async function()
     document.getElementById("tool-wrapper").appendChild(controller.buildTool());
 }
 
-params.onComplete = () => {
-    controller.destroy();
+params.onComplete = async () => {
+    await controller.destroy();
 }
 
 export default new Stage(params);

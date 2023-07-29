@@ -19,7 +19,8 @@ params.onStart = async function()
         console.log(results)
 
         EVAL.canWhistle = results["can-whistle"] === "Yes" ? true : false;
-        EVAL.canWhistle &&= results["whistle-skills"] >= 2;
+        let skills = results["whistle-skills"] || 2;
+        EVAL.canWhistle &&= (skills >= 2);
         let button;
             
         if (listener == false)
@@ -61,7 +62,7 @@ params.onStart = async function()
                     button = document.createElement("a");
                     button.innerHTML = "Continue >>";
                     button.style.background = "darkred";
-                    button.addEventListener("click", ()=>EVAL.next(7));
+                    button.addEventListener("click", ()=>EVAL.next(1));
                     main.appendChild(button);
                 }
                 else

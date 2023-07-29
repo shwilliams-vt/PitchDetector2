@@ -100,5 +100,24 @@ function animationLoop()
 }
 animationLoop();
 
+async function waitUntil(condition)
+{
 
-export {loadHTMLResource, SHA256, waitOneFrame, downloadJSON, postError};
+    return new Promise(resolve => {
+        function f()
+        {
+            if (condition())
+            {
+                resolve();
+            }
+            else
+            {
+                requestAnimationFrame(f)
+            }
+        }
+        f();
+    });
+}
+
+
+export {loadHTMLResource, SHA256, waitOneFrame, downloadJSON, postError, waitUntil};

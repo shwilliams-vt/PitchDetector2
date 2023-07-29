@@ -21,6 +21,9 @@ export default class Stage
         {
             this.userOnStart = params["onStart"];
         }
+
+        this.started = false;
+        this.finished = false;
     }
 
     async start()
@@ -37,6 +40,10 @@ export default class Stage
         {
             await this.userOnStart();
         }
+
+        this.started = true;
+
+        //await UTILS.waitUntil(()=>{return scope.finished == true});
     }
 
     async onComplete()
@@ -45,5 +52,7 @@ export default class Stage
         {
             await this.userOnComplete();
         }
+
+        this.finished = true;
     }
 }

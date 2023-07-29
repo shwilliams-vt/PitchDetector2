@@ -1,3 +1,4 @@
+import * as UTILS from "../util.js"
 import welcome from "./welcome.js"
 import introduction from "./introduction.js"
 import consent from "./consent.js"
@@ -57,14 +58,21 @@ export default
 
         if (this.current_stage != null && this.current_stage !== undefined)
         {
+            
+
             await this.current_stage.onComplete();
+
+            let scope = this;
+            await UTILS.waitUntil(()=>{return scope.current_stage.finished == true});
         }
+
+        
 
         if (this.i < this.stages.length)
         {
             this.current_stage = this.stages[this.i];
-            await this.current_stage.start();
             this.i++;
+            await this.current_stage.start();
         }
         else
         {

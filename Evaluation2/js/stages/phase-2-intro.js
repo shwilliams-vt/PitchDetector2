@@ -12,6 +12,12 @@ params.resource = "phase-2-intro";
 params.onStart = async function()
 {
 
+    if (!EVAL.canWhistle)
+    {
+        EVAL.next(3)
+        return;
+    }
+
     const demo = document.getElementById("demo");
     const slider = new Slider({
         min:"0",
@@ -52,8 +58,12 @@ params.onStart = async function()
     document.getElementById("tool-wrapper").appendChild(controller.buildTool());
 }
 
-params.onComplete = () => {
-    controller.destroy();
+params.onComplete = async () => {
+
+    if (EVAL.canWhistle)
+    {
+        await controller.destroy();
+    }
 }
 
 export default new Stage(params);
