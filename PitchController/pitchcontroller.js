@@ -436,9 +436,6 @@ export default class PitchController
                     this.session.update(smoothedPitch, this.weight);
                 }
                 e.data.session = this.session;
-
-                
-
             }
             else
             {

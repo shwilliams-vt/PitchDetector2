@@ -4,20 +4,52 @@
     "questions" : 
     [
         {
-            "id" : 1,
-            "question" : "Rate your comfort with using the NVVI tool with humming on a scale of 0 (terrible) to 5 (amazing) from left to right.",
-            "type" : "slider",
-            "extra-params" : 
-            {
-                "min" : 0,
-                "max" : 5
-            }
+            "id" : "comfort-humming",
+            "question" : "I felt very comfortable using the NVVI tool with humming.",
+            "type" : "likert"
         },
         {
-            "id" : 2,
+            "id" : "experience-humming",
             "type" : "textarea",
             "question" : "Explain your experience using humming to control the NVVI tool. For example, is humming easy? Does it control the slider like you expect it to?",
             "validate" : "return (value.length >= 3)"
+        },
+        {
+            "id" : "hum-type",
+            "type" : "list",
+            "question" : "Which of the following best describes the sound of the hum you used?",
+            "extra-params":
+            {
+                "multiple" : false,
+                "options" :
+                [
+                    "Ah",
+                    "Oh",
+                    "Uh",
+                    "Mm",
+                    "Other"
+                ]
+            }
+        },
+        {
+            "id" : "experiment-hum-types",
+            "type" : "list",
+            "question" : "Did you experiment with multiple types of humming?",
+            "extra-params":
+            {
+                "multiple" : false,
+                "options" :
+                [
+                    "Yes",
+                    "No"
+                ]
+            }
+        },
+        {
+            "id" : "experiment-hum-types-extra",
+            "type" : "textarea",
+            "question" : "If you did, explain your experience. Did some types of humming work better than others? Which ones?",
+            "optional" : true
         }
     ]
 }

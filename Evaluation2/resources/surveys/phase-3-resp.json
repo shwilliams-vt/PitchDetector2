@@ -4,7 +4,7 @@
     "questions" : 
     [
         {
-            "id" : 1,
+            "id" : "method-used",
             "question" : "Which method did you use for this phase (Phase 3)?",
             "type" : "list",
             "extra-params" : 
@@ -18,7 +18,7 @@
             }
         },
         {
-            "id" : 2,
+            "id" : "regret-choice",
             "question" : "Did you regret your choice of whistling or humming using the tool (do you wish you would have chosen the other)?",
             "type" : "list",
             "extra-params" : 
@@ -32,20 +32,21 @@
             }
         },
         {
-            "id" : 3,
+            "id" : "tool-feedback",
             "type" : "textarea",
             "question" : "Please provide any overall feedback on you experience with the tool.",
             "validate" : "return (value.length >= 3)"
         },
         {
-            "id" : 4,
-            "type" : "slider",
-            "question" : "Rate the potential of this tool from 0 (low) to 5 (high), from left to right.",
-            "extra-params" :
-            {
-                "min" : 0,
-                "max" : 5
-            }
+            "id" : "tool-potential",
+            "type" : "likert",
+            "question" : "I think this tool has high potential."
+        },
+        {
+            "id" : "use-cases",
+            "type" : "textarea",
+            "question" : "What potential use cases do you imagine for NVVI tools like the one presented in this study?",
+            "validate" : "return (value.length >= 3)"
         }
     ]
 }

@@ -16,16 +16,15 @@ params.onStart = async function()
     survey.onComplete = function(results) { 
         
         EVAL.surveys["pre-survey"] = results;
+        console.log(results)
 
-        EVAL.canWhistle = results[6] === "Yes" ? true : false;
-        EVAL.canWhistle &&= results[7] >= 2;
+        EVAL.canWhistle = results["can-whistle"] === "Yes" ? true : false;
+        EVAL.canWhistle &&= results["whistle-skills"] >= 2;
         let button;
             
         if (listener == false)
         {
             button = document.getElementById("finish");
-            console.log(listener)
-            console.log(button)
             button.addEventListener("click", function() {
     
                 if (EVAL.canWhistle == false)

@@ -4,33 +4,62 @@
     "questions" : 
     [
         {
-            "id" : 1,
+            "id" : "sex",
+            "question" : "What is your biological sex?",
+            "type" : "list",
+            "extra-params" : 
+            {
+                "options" :[
+                    "Male",
+                    "Female",
+                    "Prefer not to answer"
+                ]
+            }
+        },
+        {
+            "id" : "age",
+            "question" : "Which age group do you belong in?",
+            "type" : "list",
+            "extra-params" : 
+            {
+                "options" :[
+                    "18-24",
+                    "24-35",
+                    "35-50",
+                    "50-65",
+                    "65+",
+                    "Prefer not to answer"
+                ]
+            }
+        },
+        {
+            "id" : "nvvi-background",
             "question" : "I have strong background knowledge in NVVI.",
             "type" : "likert"
         },
         {
-            "id" : 2,
+            "id" : "music-background",
             "question" : "I have a strong musical background (e.g. playing melodic instruments, singing).",
             "type" : "likert"
         },
         {
-            "id" : 3,
-            "question" : "I have strong pitch identification ability (i.e. perfect pitch).",
-            "type" : "likert"
-        },
-        {
-            "id" : 4,
-            "question" : "I am proficient at humming/singing (with an accurate, stable pitch).",
-            "type" : "likert"
-        },
-        {
-            "id" : 5,
+            "id" : "music-background-extra",
             "type" : "textarea",
             "question" : "(Optional) Explain your musical background.",
             "optional" : true
         },
         {
-            "id" : 6,
+            "id" : "pitch-id-skills",
+            "question" : "I have strong pitch identification ability (i.e. perfect pitch).",
+            "type" : "likert"
+        },
+        {
+            "id" : "humming-skills",
+            "question" : "I am proficient at humming/singing (with an accurate, stable pitch).",
+            "type" : "likert"
+        },
+        {
+            "id" : "can-whistle",
             "question" : "Can you whistle?",
             "type" : "list",
             "extra-params" : 
@@ -44,7 +73,7 @@
             }
         },
         {
-            "id" : 7,
+            "id" : "whistle-skills",
             "question" : "(If you can whistle) I have strong whistling skills (with accurate, stable pitch).",
             "type" : "likert",
             "optional" : true

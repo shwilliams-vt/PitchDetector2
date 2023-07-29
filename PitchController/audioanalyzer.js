@@ -872,34 +872,9 @@ class WorkletAnalyzer extends AudioWorkletProcessor
 
     processEXP()
     {
-        const minPitchVolume = 0.01;
+        const minPitchVolume = 0.007;
         // const minPitchVolume = 0.05;
         
-
-        let sum = 0;
-        for (let i = 0; i < this.frameSize; i++)
-        {
-            let j = (this.internalBufferSize + this.internalBufferOffset + i - this.frameSize) % this.internalBufferSize;
-            this.audioBuffer[i] = this.internalBuffer[j];
-
-            sum += Math.abs(this.internalBuffer[j]);
-        }
-
-        let avg = sum / this.frameSize;
-
-        // console.log(avg > minPitchVolume);
-
-        if (avg < minPitchVolume)
-        {
-            // Report findings
-            this.postProcess({
-                spectrum: new Float32Array(this.frameSize),
-                pitchInfo: {pitch: NaN, confidence:0}
-            });
-
-            return;
-        }
-
         let pitch = 0;
         let confidence = 0;
 
@@ -913,6 +888,24 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             let j = (this.internalBufferSize + this.internalBufferOffset + i - this.frameSize) % this.internalBufferSize;
 
             this.ffthelper.fftBuffer[i] = this.internalBuffer[j];
+            this.audioBuffer[i] = this.internalBuffer[j];
+        }
+
+        var sumOfSquares = 0;
+        for (var i = 0; i < this.frameSize; i++) {
+            var val = this.ffthelper.fftBuffer[i];
+            sumOfSquares += val * val;
+        }
+        var rootMeanSquare = Math.sqrt(sumOfSquares / this.frameSize);
+
+        if (rootMeanSquare < minPitchVolume) {
+            // Report findings
+            this.postProcess({
+                spectrum: new Float32Array(this.frameSize),
+                pitchInfo: {pitch: NaN, confidence:0}
+            });
+
+            return;
         }
 
         // Perform FFT
@@ -959,9 +952,9 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             const maxHumBin = Math.round(maxHumHz / this.sampleRate * this.frameSize);
 
             let positive = this.audioBuffer[0] > 0;
-            this.zeroCrossing[0] = 0;
+            this.zeroCrossing[0] = positive ? 1 : -1;
 
-            for (let i = 1; i < this.frameSize - 1; i++)
+            for (let i = 1; i < this.frameSize; i++)
             {
                 let samp = this.audioBuffer[i];
                 if (positive && samp <= 0 || !positive && samp > 0)
@@ -976,17 +969,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             }
             
             // https://alexanderell.is/posts/tuner/
-            // Perform a quick root-mean-square to see if we have enough signal
             var SIZE = this.zeroCrossing.length;
-            var sumOfSquares = 0;
-            for (var i = 0; i < SIZE; i++) {
-                var val = this.zeroCrossing[i];
-                sumOfSquares += val * val;
-            }
-            var rootMeanSquare = Math.sqrt(sumOfSquares / SIZE)
-            if (rootMeanSquare < 0.01) {
-                // return -1;
-            }
             
             // Find a range in the buffer where the values are below a given threshold.
             var r1 = 0;
@@ -1011,7 +994,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             
             // Trim the buffer to these ranges and update SIZE.
             let buffer = this.zeroCrossing.slice(r1, r2);
-            SIZE = buffer.length
+            SIZE = buffer.length;
             
             // Create a new array of the sums of offsets to do the autocorrelation
             var c = new Array(SIZE).fill(0);
@@ -1057,10 +1040,10 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             
             pitch = this.sampleRate/T0;
 
-            confidence = rootMeanSquare;
+            confidence = Math.min(1, rootMeanSquare / (2 * minPitchVolume));
             confidence *= (0.8 + 0.2 * (1 - pitch / maxHumHz));
             confidence *= (0.8 + 0.2 * (1 - (width - 0.5) / 0.25) / 1.3);
-            confidence = Math.min(Math.max(0, confidence), 1);            
+            confidence = Math.min(Math.max(0, confidence), 1); 
 
             // Report findings
             this.postProcess({

@@ -4,7 +4,7 @@
     "questions" : 
     [
         {
-            "id" : 1,
+            "id" : "compare-tool-mouse-comfort",
             "question" : "Was controlling the slider with a mouse more comfortable than using the NVVI tool?",
             "type" : "list",
             "extra-params" : 
@@ -18,7 +18,7 @@
             }
         },
         {
-            "id" : 2,
+            "id" : "compare-tool-mouse-effectiveness",
             "question" : "Was controlling the slider with a mouse more effective than using the NVVI tool?",
             "type" : "list",
             "extra-params" : 
@@ -32,7 +32,7 @@
             }
         },
         {
-            "id" : 3,
+            "id" : "prefer-tool-or-mouse",
             "question" : "Which would you prefer to use to control sliders, the NVVI tool or a mouse, or both?",
             "type" : "list",
             "extra-params" : 
@@ -46,28 +46,21 @@
             }
         },
         {
-            "id" : 4,
+            "id" : "compare-tool-mouse-experience",
             "type" : "textarea",
             "question" : "Compare your experience with using the NVVI tool with using a mouse. For example, is one more comfortable but less effective than the other? Is one more fun?",
             "validate" : "return (value.length >= 3)"
         },
         {
-            "id" : 5,
+            "id" : "better-with-practice",
             "type" : "textarea",
             "question" : "If you practiced, do you think you could become better with the NVVI tool? Would this change your comparison of using the NVVI tool with a mouse?",
             "validate" : "return (value.length >= 3)"
         },
         {
-            "id" : 6,
-            "type" : "textarea",
-            "question" : "What potential use cases do you imagine for NVVI tools like the one presented in this study?",
-            "validate" : "return (value.length >= 3)"
-        },
-        {
-            "id" : 7,
+            "id" : "study-feedback",
             "type" : "textarea",
             "question" : "(Optional) Please provide any overall feedback on this study.",
-            "validate" : "return (value.length >= 3)",
             "optional" : true
         }
     ]
