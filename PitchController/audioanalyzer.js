@@ -898,6 +898,8 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         }
         var rootMeanSquare = Math.sqrt(sumOfSquares / this.frameSize);
 
+        // console.log(rootMeanSquare)
+
         if (rootMeanSquare < minPitchVolume) {
             // Report findings
             this.postProcess({

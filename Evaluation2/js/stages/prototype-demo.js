@@ -7,7 +7,7 @@ const params = {};
 let controller; 
 
 
-params.resource = "prototype-intro";
+params.resource = "prototype-demo";
 params.onStart = async function()
 {
 

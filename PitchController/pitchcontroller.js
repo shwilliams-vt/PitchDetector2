@@ -117,6 +117,9 @@ export default class PitchController
         // Weight to multiply by
         this.weight = 1.0;
 
+        // Boost amt
+        this.boostAmt = 1.0;
+
         // Use transient detection for enabled/disabled
         this.useTransientToggle = true;
 
@@ -185,6 +188,29 @@ export default class PitchController
 
         // Specify analyzer file path
         this.analyzerPath = (this.pitchControllerDirectory === "PitchController/" ? "/" : "https://") + this.pitchControllerDirectory + "audioanalyzer.js";
+
+        // Global settings
+        window.PITCH_CONTROLLERS = window.PITCH_CONTROLLERS || {};
+        window.PITCH_CONTROLLERS.LIST = window.PITCH_CONTROLLERS.LIST || [];
+        this.id = window.PITCH_CONTROLLERS.CURR_ID || 1;
+        window.PITCH_CONTROLLERS.CURR_ID++;
+        window.PITCH_CONTROLLERS.LIST.push(this);
+
+        window.PITCH_CONTROLLERS.CURR_MIC_BOOST = window.PITCH_CONTROLLERS.CURR_MIC_BOOST || 1;
+        window.PITCH_CONTROLLERS.SET_MIC_BOOST = window.PITCH_CONTROLLERS.SET_MIC_BOOST || function(amt)
+        {
+            window.PITCH_CONTROLLERS.LIST.forEach(controller => {
+                controller.setBoost(amt);
+            })
+        }   
+
+    }
+
+    setBoost(amt)
+    {
+        this.boostAmt = amt;
+        this.inGain.gain.value = amt;
+
     }
 
     toggleUseTransientToggle(val)
@@ -236,12 +262,18 @@ export default class PitchController
         const to = 1000;
         const geometricMean = Math.sqrt(from * to);
 
+        const inGain = audioContext.createGain();
+        inGain.gain.value = 1.0;
+        this.inGain = inGain;
+
         const bandpass = audioContext.createBiquadFilter();
         // bandpass.type = 'bandpass';
         // bandpass.frequency.value = geometricMean;
         // bandpass.Q.value = geometricMean / (to - from);
         bandpass.type = 'lowpass';
         bandpass.frequency.value = 2000;
+
+        inGain.connect(bandpass);
 
         if (false)
         {
@@ -251,7 +283,7 @@ export default class PitchController
             osc.frequency.setValueAtTime(440, audioContext.currentTime);
             osc.type = "sawtooth"
             osc.start();
-            osc.connect(bandpass);
+            osc.connect(inGain);
 
             // let osc2 = audioContext.createOscillator();
             // // osc2.type = "custom";
@@ -277,7 +309,7 @@ export default class PitchController
         }
         else
         {
-            audioSource.connect(bandpass);
+            audioSource.connect(inGain);
         }
 
         // Connect input to an analyser

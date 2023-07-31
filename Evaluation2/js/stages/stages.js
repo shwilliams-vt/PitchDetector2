@@ -8,6 +8,7 @@ import tool_overview from "./tool-overview.js"
 import selection_overview from "./selection-overview.js"
 import selection_handling from "./selection-handling.js"
 import prototype_intro from "./prototype-intro.js"
+import prototype_demo from "./prototype-demo.js"
 import pre_survey from "./pre-survey.js"
 import phase_1_intro from "./phase-1-intro.js"
 import phase_1_eval from "./phase-1-eval.js"
@@ -36,6 +37,7 @@ export default
         selection_overview, 
         selection_handling, 
         prototype_intro, 
+        prototype_demo,
         pre_survey,
         phase_1_intro, 
         phase_1_eval,  

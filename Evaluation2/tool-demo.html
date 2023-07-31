@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="./css/main.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css">
+    <title>Document</title>
+</head>
+<body style="width:100vw;height:100vh; display: flex; align-items: center; justify-content: center;flex-direction: column;">
+    <a id="start-btn" style="background-color: blue; padding:20px;">Start</a>
+    <div id="tool-wrapper"></div>
+</body>
+</html>
+<script type="module">
+
+
+    import PitchController from "../../../PitchController/pitchcontroller.js";
+
+    document.getElementById("start-btn").addEventListener("click", async () => {
+
+        let input = document.createElement("input");
+        input.setAttribute("type", "range");
+        input.setAttribute("min", "0");
+        input.setAttribute("max", "1000");
+        input.value = 500;
+
+        const afterprocessing = function(e)
+        {
+            if (e.data.insession == true)
+            {
+                input.value = parseInt(input.value) + e.data.session.deltapitch;
+                // onInput(userSlider.value);
+            }
+        }
+
+        let controller = new PitchController(
+        {
+            "frameSize": 1024,
+            "sampleRate": 44100,
+            "processingMode": "EXP",
+            "smoothness": 60,
+            "precision": 0,
+            "afterprocessing": afterprocessing,
+            "transientWindowTime": 370,
+            "processingRate": 512,
+            "weight": 80
+        }
+        );
+
+        document.body.appendChild(input);
+
+
+        await controller.initialize();
+        controller.toggle(true);
+
+        document.getElementById("tool-wrapper").appendChild(controller.buildTool());
+
+    })
+    
+</script>

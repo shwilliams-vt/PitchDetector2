@@ -78,6 +78,12 @@ space
     background: linear-gradient(to bottom, forestgreen, darkgreen);
 }
 
+#demo-video
+{
+    width: 50%;
+    
+}
+
 .evaluation-tool
 {
     padding: 20px;
