@@ -15,6 +15,12 @@
             "validate" : "return (value.length >= 3)"
         },
         {
+            "id" : "whistle-strategy",
+            "type" : "textarea",
+            "question" : "Please explain your strategy for moving the slider. For example, did you move it in small increments? Did you use large frequency range?",
+            "validate" : "return (value.length >= 3)"
+        },
+        {
             "id" : "compare-experiences",
             "type" : "textarea",
             "question" : "Compare your experiences of using whistling or humming to control the NVVI tool. For example, which was more comfortable? Which was more effective?",

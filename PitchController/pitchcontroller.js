@@ -107,7 +107,7 @@ export default class PitchController
         this.lastreports = [];
 
         // Confidenc misses to end session
-        this.maxconfidencemisses = 3;
+        this.maxconfidencemisses = 2;
         this.currconfidencemisses = 0;
 
         // Indicating a "session"
@@ -267,11 +267,13 @@ export default class PitchController
         this.inGain = inGain;
 
         const bandpass = audioContext.createBiquadFilter();
-        // bandpass.type = 'bandpass';
+        bandpass.type = 'bandpass';
+        bandpass.frequency.value = 160;
+        bandpass.Q.value = 1.0; // ?
         // bandpass.frequency.value = geometricMean;
         // bandpass.Q.value = geometricMean / (to - from);
-        bandpass.type = 'lowpass';
-        bandpass.frequency.value = 2000;
+        // bandpass.type = 'lowpass';
+        // bandpass.frequency.value = 2000;
 
         inGain.connect(bandpass);
 

@@ -50,6 +50,12 @@
             "type" : "textarea",
             "question" : "If you did, explain your experience. Did some types of humming work better than others? Which ones?",
             "optional" : true
+        },
+        {
+            "id" : "hum-strategy",
+            "type" : "textarea",
+            "question" : "Please explain your strategy for moving the slider. For example, did you move it in small increments? Did you use large frequency range?",
+            "validate" : "return (value.length >= 3)"
         }
     ]
 }

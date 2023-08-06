@@ -8,7 +8,7 @@
         "frameSize": 1024,
         "sampleRate": 44100,
         "processingMode": "EXP",
-        "smoothness": 60,
+        "smoothness": 45,
         "precision": 0,
         "transientWindowTime": 370,
         "processingRate": 512,
