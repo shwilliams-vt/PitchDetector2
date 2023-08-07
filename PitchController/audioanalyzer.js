@@ -4,17 +4,6 @@ const EXP = "EXP";
 
 const window = {};
 
-// import
-// {
-//     getMaxPeakBin,
-//     getNthPeakBin,
-//     getMaxParabolicApproximatePeakBin,
-//     getNthParabolicApproximatePeakBin,
-//     getParabolicApproximateFrequency,
-//     getParabolicApproximatePower
-// } from "./helpers.js";
-// import FFTHelper from "./ffthelper.js";
-
 // -- Begin add helpers
 
 function parabolicInterpolationX(spectrum, bin)
@@ -22,7 +11,7 @@ function parabolicInterpolationX(spectrum, bin)
     var x1 = spectrum[bin - 1];
     var x2 = spectrum[bin];
     var x3 = spectrum[bin + 1]
-
+    
     var a = (x1 + x3 - 2 * x2) / 2;
     var b = (x3 - x1) / 2
     if (a) {
@@ -81,10 +70,27 @@ function noiseScore(spectrum, maxSearch, type, maxBin, lastSpectrum, sampleRate,
 
 function normalize(spectrum)
 {
-    const max = Math.max(...spectrum);
+    let max = -99999, min = 99999;
     for (let i = 0; i < spectrum.length; i++)
     {
-        spectrum[i] /= max;
+        if (spectrum[i] > max)
+            max = spectrum[i];
+        if (spectrum[i] < min)
+            min = spectrum[i]
+    }
+    let val = max;
+    if (max < Math.abs(min))
+    {
+        val = Math.abs(min);
+    }
+
+    if (val == 0)
+    {
+        val = 1;
+    }
+    for (let i = 0; i < spectrum.length; i++)
+    {
+        spectrum[i] /= val;
     }
 }
 
@@ -108,20 +114,6 @@ function isPeak2 (spectrum, i, minPeakGain, useFive)
                 peak &= spectrum[i] >= spectrum[i - 2];
         }
         return peak;
-}
-
-function getPeaks(spectrum, maxSearch, minPeakGain, useFive)
-{
-    let peaks = [];
-
-    for (let i = 0; i < maxSearch; i++)
-    {
-        if (isPeak2(spectrum, i, minPeakGain, useFive))
-        {
-            peaks.push(i);
-        }
-    }
-    return peaks;
 }
 
 export function getMaxPeakBin(spectrum)
@@ -475,9 +467,34 @@ export function getParabolicBinApproximation(spectrum, bin)
     return interpolatedbin;
 }
 
-export function isPeak(array, bin)
+function isPeak (spectrum, i, minPeakGain, useFive)
+    {
+        let peak = i > 0 && spectrum[i] >= minPeakGain;
+        peak &= spectrum[i] >= spectrum[i + 1];
+        peak &= spectrum[i] >= spectrum[i - 1];
+
+        if (useFive)
+        {
+            peak &= spectrum[i] >= spectrum[i + 2];
+            // Be lenient with lower bands
+            if (i >= 2)
+                peak &= spectrum[i] >= spectrum[i - 2];
+        }
+        return peak;
+}
+
+function getPeaks(spectrum, maxSearch, minPeakGain, useFive)
 {
-    return (array[bin] > array[bin + 1]) && (array[bin] > array[bin - 1]);
+    let peaks = [];
+
+    for (let i = 0; i < maxSearch; i++)
+    {
+        if (isPeak(spectrum, i, minPeakGain, useFive))
+        {
+            peaks.push(i);
+        }
+    }
+    return peaks;
 }
 
 export function getClosestPeakBin(numArray, position)
@@ -1642,7 +1659,372 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         });
     }
 
+
     processEXP()
+    {
+
+        // We have some good algorithms
+        // First do time domain O(n) analysis to determine which route to take
+
+        for (let i = 0; i < this.frameSize; i++)
+        {
+            let j = (this.internalBufferSize + this.internalBufferOffset + i - this.frameSize) % this.internalBufferSize;
+
+            this.audioBuffer[i] = this.internalBuffer[j];
+        }
+
+        normalize(this.audioBuffer);
+
+        // Perform naive zero crossing
+        let zeroCrossing = [];
+
+        let start = 0, end = this.audioBuffer.length - 1;
+        let positive = this.audioBuffer[0] >= 0;
+        for (; start < this.audioBuffer.length; start++)
+        {
+            let v = this.audioBuffer[start];
+            if (positive && v < 0)
+                break;
+            else if (!positive && v >= 0)
+                break;
+        }
+        positive = this.audioBuffer[this.audioBuffer.length - 1] > 0;
+        for (; end > -1; end--)
+        {
+            let v = this.audioBuffer[end];
+            if (positive && v < 0)
+                break;
+            else if (!positive && v >= 0)
+                break;
+        }
+
+        positive = this.audioBuffer[start] >= 0;
+        for (let i = start; i <= end; i++)
+        {
+            let val = this.audioBuffer[i];
+            if ((positive && val < 0) || (!positive && val >= 0))
+            {
+                positive = !positive;
+                zeroCrossing.push(i);
+            }
+        }
+
+        let diffs = []
+        for (let i = 1; i < zeroCrossing.length; i++)
+        {
+            diffs.push(zeroCrossing[i] - zeroCrossing[i-1])
+        }
+
+        // Find harmonics
+        let harmonics = [];
+        let maxDiff = 30;
+        for (let i = 0; i < diffs.length; i++)
+        {
+            let unique = true;
+            for (let h = 0; h < harmonics.length; h++)
+            {
+                let existingHarmonic = harmonics[h];
+                let thisHarmonic = diffs[i];
+
+                if (Math.abs(thisHarmonic - existingHarmonic[0]) <= maxDiff)
+                {
+                    unique = false;
+                    let n = existingHarmonic[1];
+                    harmonics[h][0] = (existingHarmonic[0] * n + thisHarmonic) / (n + 1);
+                    harmonics[h][1]++;
+                }
+            }
+
+            if (unique == true)
+            {
+                harmonics.push([diffs[i], 1]);
+            }
+        }
+
+        // for (let h = 0; h < harmonics.length; h++)
+        // {
+
+        // }
+        let maxBin = Math.max(...harmonics.map(v=>v[0]));
+        let f = this.sampleRate / maxBin;
+
+        const minFFTAnalysis = 600; // Hz
+        if (f > minFFTAnalysis)
+        {
+            this.processEXPWorking();
+            // console.log(" > " + minFFTAnalysis);
+        }
+        else
+        {
+            this.analyzeDFT();
+            // console.log(" < " + minFFTAnalysis);
+        }
+
+    }
+
+    analyzeDFT()
+    {
+        
+        const baseFrequency = 75;
+        const sampleInterval = 15; // Hz
+        // const maxFrequency = 2500; // Hz
+        const maxFrequency = 900;
+        const numFrequencies = Math.ceil((maxFrequency - baseFrequency) / sampleInterval);
+        const sampleLength = this.frameSize;
+
+        let results = [new Float32Array(numFrequencies), new Float32Array(numFrequencies)];
+        for (let i = 0; i < numFrequencies; i++)
+        {
+            let f = baseFrequency + sampleInterval * i;
+            // let resOffset = f / this.sampleRate * resolution;
+            // let n = Math.floor(resolution / resOffset);
+            let bin = f / this.sampleRate;
+            let a = -2 * Math.PI * bin;
+            
+            for (let j = 0; j < sampleLength; j ++)
+            {
+                let v = Math.cos(a * j);
+                let v2 = Math.sin(a * j);
+
+                results[0][i] += v * this.audioBuffer[j];
+                results[1][i] += v2 * this.audioBuffer[j];
+            }
+        }
+
+        let mags = results[0].map((v,i)=>Math.sqrt(v ** 2 + results[1][i] ** 2))
+        normalize(mags);
+
+        // Now we have low spectrum. Lets see whats up with HPS
+        const numHarmonics = 4;
+
+        
+        for (let h = 1; h <= numHarmonics; h++)
+        {
+            let copy = mags.slice(0);
+            for (let i = 0; i < numFrequencies; i++)
+            {
+                let f = baseFrequency + i * sampleInterval;
+
+                let j = f * (1 + h) / this.sampleRate;
+                if (j < numFrequencies)
+                {
+                    let v = parabolicInterpolationY(copy, j);
+                    mags[i] *= v;
+
+                }
+            }
+            // mags[i] /= ((i + 1) / numFrequencies);
+            // mags[i] = 0.5 * mags[i] + 0.5 * mags[i] * (i + 1) / 10
+        }
+        normalize(mags);
+
+        
+
+        // Average points
+        function averageFunction2(spectrum)
+        {
+            let a = new Float32Array(spectrum.length);
+            for (let i = 1; i < spectrum.length; i++)
+            {
+                a[i] = Math.sqrt( spectrum[i] ** 2 + spectrum[i - 1] ** 2);
+            }
+            return a;
+        }
+        function findClosestPeak2(spectrum, bin)
+        {
+            let minMagPeak = 0.3;
+            for (let i = 0; i < spectrum.length; i++)
+            {
+                if (isPeak(spectrum, bin - i, minMagPeak, true))
+                {
+                    return bin - i;
+                }
+                else if (isPeak(spectrum, bin + i, minMagPeak, true))
+                {
+                    return bin + i;
+                }
+            }
+
+            return bin;
+        }
+        
+        let avg = averageFunction2(mags);
+        normalize(avg)
+
+        let avgMaxBin = getPeaks(avg, avg.length, 0.3, true)[0];
+        let maxBin = findClosestPeak2(mags, avgMaxBin);
+
+        let pitch = maxBin;
+        pitch = baseFrequency + parabolicInterpolationX(mags, maxBin) * sampleInterval;
+
+        let confidence = 0;
+        let mean = avg.reduce((s,v)=>s+=v) / avg.length;
+        let sd = Math.sqrt(avg.reduce((s,v)=>s+=(v-mean) ** 2) / avg.length);
+        let sum = 0;
+        let minVal = 0.2;
+        for (let i = 2; i < avg.length - 2; i++)
+        {
+            let many = avg[i] > minVal && avg[i - 1] > minVal && avg[i + 1] > minVal
+                && avg[i - 2] > minVal && avg[i + 2] > minVal;
+            if (i != avgMaxBin && many)
+            {
+                sum ++;
+            }
+        }
+        sum /= numFrequencies;
+        confidence = 1 - Math.atan(sum * 5) / Math.PI * 2;
+
+        this.postProcess({
+            spectrum: avg,
+            pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
+        });
+
+        // this.port.postMessage({magnitudes: avg, pitch: pitch, type: "", confidence: confidence});
+
+    }
+
+    processEXPWorking()
+    {
+        for (let i = 0; i < this.frameSize; i++)
+        {
+            let j = (this.internalBufferSize + this.internalBufferOffset + i - this.frameSize) % this.internalBufferSize;
+
+            // this.ffthelper.fftBuffer[i] = this.internalBuffer[j];
+            this.audioBuffer[i] = this.internalBuffer[j] * this.ffthelper.hannwindow(i, this.frameSize);
+        }
+
+        normalize(this.audioBuffer);
+        let results = FFT.fft(this.audioBuffer, false);
+        let magnitudes = results.magnitudes();
+
+
+        normalize(magnitudes);
+
+        let avg = new Float32Array(magnitudes.length);
+
+        for (let i = 1; i < magnitudes.length - 1; i++)
+        {
+            avg[i] = magnitudes[i - 1] * magnitudes[i] * magnitudes[i + 1];
+        }
+
+        let oldAvg = [...avg]
+        for (let i = 1; i < oldAvg.length - 1; i++)
+        {
+            avg[i] = oldAvg[i];
+            if (avg[i] < 0.05)
+            {
+                avg[i] = 0
+            }
+            // avg[i] = Math.cbrt(oldAvg[i - 1] * oldAvg[i] * oldAvg[i + 1]);
+        }
+
+
+
+        let pitch = 0;
+        let confidence = 0;
+
+        let sum = avg.reduce((s,v)=>s+=v);
+        let max = Math.max(...avg);
+        let mean = sum / avg.length;
+        let sd = Math.sqrt(avg.reduce((s,v)=>s+=(v - mean) ** 2) / avg.length);
+        confidence = sum * (1 - max) * sd;
+
+        // let peak = getClosestPeakBin(avg, 0);
+        let peak = 0;
+        let peaks = [];
+        for (let i = 1; i < avg.length - 1; i++)
+        {
+            if (avg[i] >= avg[i - 1] && avg[i] >= avg[i + 1] && avg[i] > 0.05)
+            {
+                peaks.push(i)
+            }
+        };
+
+        
+        let maxDiff = 0;
+        for (let i = 1; i < peaks.length; i++)
+        {
+            let d = peaks[i] - peaks[i-1]
+            if (d > maxDiff)
+            {
+                maxDiff = d;
+            }
+        };
+
+        peak = peaks[0];
+        if (maxDiff > 20)
+        {
+            console.log(peak, peaks[peaks.length - 1])
+            peak = peaks[peaks.length - 1];
+        }
+
+
+
+        let sum2 = 0;
+        let numPeaks = 0;
+        for (let i = 0; i < avg.length; i++)
+        {
+            if (peak - i < 0)
+            {
+                break;
+            }
+            else
+            {
+                let v = avg[peak - i];
+                if (v < 0.05)
+                {
+                    break;
+                }
+                else
+                {
+                    sum2 += v * i;
+                }
+            }
+        }
+        for (let i = 0; i < avg.length; i++)
+        {
+            if (peak + i >= avg.length)
+            {
+                break;
+            }
+            else
+            {
+                let v = avg[peak + i];
+                if (v < 0.05)
+                {
+                    break;
+                }
+                else
+                {
+                    sum2 += v * i;
+                }
+            }
+        }
+        for (let i = 0; i < avg.length; i++)
+        {
+            if (avg[i] >= 0.05)
+            {
+                numPeaks++;
+            }
+        }
+
+        let boundedSum = Math.min(1, Math.max(0, 1 - sum2));
+        if (numPeaks == 2)
+            numPeaks = 1;
+        let boundedPeaks = Math.max(0, 1 / numPeaks);
+        confidence = 0.7 * boundedSum + 0.3 * boundedPeaks;
+        // console.log(confidence);
+
+        pitch = parabolicInterpolationX(avg, peak) * this.sampleRate / this.frameSize;
+
+        this.postProcess({
+            spectrum: avg,
+            pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
+        });
+    }
+
+
+    processEXPThisOneWorks()
     {
         for (let i = 0; i < this.frameSize; i++)
         {
