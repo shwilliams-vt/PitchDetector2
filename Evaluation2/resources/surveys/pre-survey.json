@@ -46,6 +46,11 @@
             }
         },
         {
+            "id" : "mic-type",
+            "question" : "Explain your microphone setup. Are you using a built-in laptop microphone? A stand-alone microphone? A headset microphone?",
+            "type" : "textarea"
+        },
+        {
             "id" : "nvvi-background",
             "question" : "I have strong background knowledge in NVVI.",
             "type" : "likert"
