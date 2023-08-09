@@ -48,7 +48,8 @@
         {
             "id" : "mic-type",
             "question" : "Explain your microphone setup. Are you using a built-in laptop microphone? A stand-alone microphone? A headset microphone?",
-            "type" : "textarea"
+            "type" : "textarea",
+            "validate" : "return (value.length >= 3)"
         },
         {
             "id" : "nvvi-background",
