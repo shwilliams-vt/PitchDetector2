@@ -227,11 +227,14 @@ export default class AnalysisTool
         this.content.innerHTML = "";
 
         // Create survey and phase views
+        const idName = document.createElement("h2");
         const surveyList = document.createElement("div");
         const phaseList = document.createElement("div");
+        this.content.appendChild(idName);
         this.content.appendChild(surveyList);
         this.content.appendChild(phaseList);
 
+        idName.appendChild((()=>{const d = document.createElement("h2"); d.innerText = `ID: ${id}`; return d})())
         surveyList.appendChild((()=>{const d = document.createElement("h2"); d.innerText = "Surveys"; return d})())
         phaseList.appendChild((()=>{const d = document.createElement("h2"); d.innerText = "Phases"; return d})())
 
