@@ -262,7 +262,7 @@ export default class AnalysisTool
             s.survey = result.surveys[survey];
             s.surveyEnabled = false;
 
-            s.label = document.createElement("span"); 
+            s.label = document.createElement("span");
             s.label.innerText = survey;
             s.label.classList.add("survey-label");
             s.label.addEventListener("click", ()=>{if (lastSurvey && lastSurvey !== s) toggleSurvey(lastSurvey); toggleSurvey(s)});
@@ -300,7 +300,7 @@ export default class AnalysisTool
             p.phase = result.results[phase];
             p.phaseEnabled = false;
 
-            p.label = document.createElement("span"); 
+            p.label = document.createElement("span");
             p.label.innerText = phase;
             p.label.classList.add("survey-label");
             p.label.addEventListener("click", ()=>{if (lastPhase && lastPhase !== p) togglePhase(lastPhase); togglePhase(p)});
@@ -321,10 +321,113 @@ export default class AnalysisTool
 
     }
 
-    async loadIndividualView()
+    async loadIndividualView(filter)
     {
         this.content.innerHTML = "";
+
+        // Create sort by dropdown
+        const sortByDiv = document.createElement("div");
+        this.content.appendChild(sortByDiv);
+        {
+            sortByDiv.appendChild((()=>{let s = document.createElement("span"); s.innerText = "Sort By: "; return s})())
+            let query = document.createElement("select");
+            sortByDiv.appendChild(query);
+            const options = [
+                "ID",
+                "Whistle",
+                "Sex",
+                "Age",
+                "Music BG",
+                "Pitch ID"
+            ];
+
+            for (const o of options)
+            {
+                let s = document.createElement("option");
+                s.innerText = o;
+                s.value = o;
+                query.appendChild(s);
+            }
+
+            query.addEventListener("change", e=>this.loadIndividualView(e.target.value), false);
+            if (filter !== undefined)
+            {
+                query.value = filter;
+            }
+
+        }
         // Create list of all entries
+        if (filter !== undefined)
+        {
+            console.log(filter)
+            switch (filter)
+            {
+                case "ID":
+                    this.results.sort((a,b)=>{
+                        const idA = a.id.toUpperCase();
+                        const idB = b.id.toUpperCase();
+                        console.log(idA, idB)
+                        if (idA < idB) {
+                            return -1;
+                        }
+                        if (idA > idB) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    break;
+                case "Whistle":
+                    this.results.sort((a,b)=>{
+                        if (a.canWhistle && !b.canWhistle)
+                        {
+                            return -1;
+                        }
+                        else if (!a.canWhistle && b.canWhistle)
+                        {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    break;
+                case "Sex":
+                    this.results.sort((a,b)=>{
+                        const sexA = Object.values(a.surveys)[0].sex.toUpperCase();
+                        const sexB = Object.values(b.surveys)[0].sex.toUpperCase();
+                        if (sexA < sexB) {
+                            return -1;
+                        }
+                        if (sexA > sexB) {
+                            return 1;
+                        }
+                        return 0;
+                    });
+                    break;
+                case "Age":
+                    this.results.sort((a,b)=>{
+                        let numA = parseInt(Object.values(a.surveys)[0].age.substring(0,2));
+                        let numB = parseInt(Object.values(b.surveys)[0].age.substring(0,2));
+                        return numA - numB;
+                    });
+                    break;
+                case "Music BG":
+                    this.results.sort((a,b)=>{
+                        let numA = parseInt(Object.values(a.surveys)[0]["music-background"]);
+                        let numB = parseInt(Object.values(b.surveys)[0]["music-background"]);
+                        return numA - numB;
+                    });
+                    break;
+                case "Pitch ID":
+                    this.results.sort((a,b)=>{
+                        let numA = parseInt(Object.values(a.surveys)[0]["pitch-id-skills"]);
+                        let numB = parseInt(Object.values(b.surveys)[0]["pitch-id-skills"]);
+                        return numA - numB;
+                    });
+                    break;
+                default:
+                    console.log("undefined filter");
+                    break;
+            }
+        }
         for (const result of this.results)
         {
             let newDiv = document.createElement("div");
@@ -333,11 +436,15 @@ export default class AnalysisTool
             newDiv.innerHTML += `<span>Whistle: ${result.canWhistle}</span>`;
             newDiv.innerHTML += `<span>Sex: ${Object.values(result.surveys)[0].sex}</span>`;
             newDiv.innerHTML += `<span>Age: ${Object.values(result.surveys)[0].age}</span>`;
+            newDiv.innerHTML += `<span>Music BG: ${Object.values(result.surveys)[0]["music-background"]}/5</span>`;
+            newDiv.innerHTML += `<span>Pitch ID: ${Object.values(result.surveys)[0]["pitch-id-skills"]}/5</span>`;
 
             newDiv.classList.add("individual-result-list");
             newDiv.addEventListener("click", ()=>this.loadIndividualResult.bind(this)(result.id))
             this.content.appendChild(newDiv);
         }
+
+
     }
 
     async setMode(mode)
@@ -357,7 +464,7 @@ export default class AnalysisTool
 
     async init()
     {
-        
+
         await this.loadFiles();
         await this.collectData();
         await this.draw();
