@@ -62,6 +62,10 @@ export default class ChartJS
 
         let config = JSON.parse(JSON.stringify(defaultConfig));
 
+        config.type = params.type || config.type;
+
+        config.options.scales.xAxes[0].scaleLabel.labelString = params.xLabel || 'Time (ms)';
+
         config.options.scales.yAxes[0].ticks.min = params.min || 0;
         config.options.scales.yAxes[0].ticks.max = params.max || 100;
 
@@ -70,7 +74,11 @@ export default class ChartJS
 
         let labels = params.labels //
         let datapoints = params.datapoints // [0, 20, 20, 60, 60, 120, NaN, 180, 120, 125, 105, 110, 170];
-        let data = {
+
+        let data;
+        if (datapoints.length == 2)
+        {
+          data = {
             labels: labels,
             datasets: [
                 {
@@ -90,7 +98,24 @@ export default class ChartJS
                     tension: 0.4
                 }
             ]
-        };
+          };
+        }
+        else
+        {
+          data = {
+            labels: labels,
+            datasets: [
+                {
+                    label: params.subtitles[0],
+                    data: datapoints[0],
+                    borderColor: "#FF0000",
+                    fill: false,
+                    cubicInterpolationMode: 'monotone',
+                    tension: 0.4
+                }
+            ]
+          };
+        }
 
         config.data = data;
         let scope = this;

@@ -1,4 +1,6 @@
 import * as VIZ from "../tools/viz/viz.js"
+import ChartJS from "../tools/viz/chart.js"
+import * as UTILS from "../util.js";
 
 const MAX_TIME = 15 // s;
 
@@ -47,7 +49,7 @@ async function loadRound(r)
 
             // Now consider max time
             let sampleRate = 100; // ms
-            let maxPoints = MAX_TIME * sampleRate;
+            let maxPoints = MAX_TIME * ( 1000 / sampleRate);
             tClone.dataPoints = tClone.dataPoints.slice(0, maxPoints);
             d.chartArea.appendChild(VIZ.drawTest(tClone, false));
         }
@@ -441,6 +443,112 @@ export default class AnalysisTool
                 }
             }
         }
+
+        // Now that we've filtered, create summary
+
+        let summary = {};
+
+        // Create some basic overview things
+        let totalNum = tmpResults.length;
+
+        let sexVals = [
+            ["Male", 0],
+            ["Female", 0],
+            ["Prefer not to answer", 0]
+        ]
+
+        let canWhistleVals = [
+            [true, 0], [false, 0]
+        ]
+
+        let ageRangeVals = [
+            ["18-24", 0],
+            ["24-35", 0],
+            ["35-50", 0],
+            ["50-65", 0],
+            ["65+", 0],
+            ["Prefer not to answer", 0]
+        ];
+
+        let voiceTypeVals = [
+            ["Low", 0],
+            ["Medium", 0],
+            ["High", 0]
+        ];
+
+        let musicBGVals = [
+            [0, 0],[1, 0],[2, 0],[3, 0],[4, 0],[5, 0]
+        ];
+
+        let pitchIDSkillsVals = [
+            [0, 0],[1, 0],[2, 0],[3, 0],[4, 0],[5, 0]
+        ];
+
+        for (const result of tmpResults)
+        {
+
+            // Whistling
+            canWhistleVals.find(v=>v[0]===result.canWhistle)[1]++;
+
+            // Sex
+            sexVals.find(v=>v[0]===Object.values(result.surveys)[0].sex)[1]++;
+
+            // Age
+            ageRangeVals.find(v=>v[0]===Object.values(result.surveys)[0].age)[1]++;
+
+            // Voice type
+            voiceTypeVals.find(v=>v[0]===Object.values(result.surveys)[0]["voice-type"])[1]++;
+
+            // Music BG
+            musicBGVals.find(v=>v[0]===Object.values(result.surveys)[0]["music-background"])[1]++;
+
+            // Pitch ID
+            pitchIDSkillsVals.find(v=>v[0]===Object.values(result.surveys)[0]["pitch-id-skills"])[1]++;
+        }
+
+        // Now draw them
+        const drawMacroChart = async function (name, vals)
+        {
+            let d = document.createElement("div");
+            d.style.width = "500px";
+            d.style.height = "500px";
+            d.style.display = "inline-block";
+            this.content.appendChild(d);
+
+            await UTILS.waitOneFrame();
+
+            d.appendChild(await new ChartJS({
+                type: "bar",
+                title: name,
+                subtitles: [name],
+                xLabel: " ",
+                labels: vals.map(v=>v[0]),
+                datapoints: [vals.map(v=>v[1])],
+                min: 0,
+                max: totalNum,
+                interactive: false
+            }).generateHTML());
+        }.bind(this)
+        // Whistling
+        await drawMacroChart("Whistling", canWhistleVals);
+
+        // Sex
+        await drawMacroChart("Sex", sexVals);
+
+        // Age
+        await drawMacroChart("Age", ageRangeVals);
+
+        // Voice type
+        await drawMacroChart("Voice Type", voiceTypeVals);
+
+        // Music BG
+        await drawMacroChart("Music BG", musicBGVals);
+
+        // Pitch ID
+        await drawMacroChart("Pitch ID", pitchIDSkillsVals);
+        
+
+
         for (const result of tmpResults)
         {
             let newDiv = document.createElement("div");
