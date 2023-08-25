@@ -316,13 +316,15 @@ export default class AnalysisTool
 
     }
 
-    async loadAggregateView(filter, value)
+    async loadAggregateView(filters)
     {
         this.content.innerHTML = "";
 
         // Create sort by dropdown
         const sortByDiv = document.createElement("div");
         this.content.appendChild(sortByDiv);
+        let newFilters = [];
+        function appendFilter(f)
         {
             sortByDiv.appendChild((()=>{let s = document.createElement("span"); s.innerText = "Filter where : "; return s})())
             let query = document.createElement("select");
@@ -343,11 +345,6 @@ export default class AnalysisTool
                 query.appendChild(s);
             }
 
-            if (filter !== undefined)
-            {
-                query.value = filter;
-            }
-
             const label = document.createElement("span");
             label.innerText = " = ";
             sortByDiv.appendChild(label)
@@ -355,47 +352,93 @@ export default class AnalysisTool
             let queryValue = document.createElement("input");
             queryValue.setAttribute("type", "text");
             sortByDiv.appendChild(queryValue);
+
+            if (f !== undefined)
+            {
+                query.value = f.filter;
+                queryValue.value = f.value;
+            }
+
+            let addFilter = document.createElement("a");
+            addFilter.innerText = "+";
+            sortByDiv.appendChild(addFilter);
+            addFilter.addEventListener("click", ()=>{appendFilter()})
+
+            sortByDiv.appendChild((()=>{let s = document.createElement("br"); return s})());
+
+            newFilters.push({filter: query, value: queryValue});
             
-            let submit = document.createElement("a");
-            submit.innerText = "Update";
-            sortByDiv.appendChild(submit);
-            submit.addEventListener("click", ()=>{this.loadAggregateView(query.value, queryValue.value)})
+        }
+        function grabFilters()
+        {
+            let filterss = [];
+
+            for (const f of newFilters)
+            {
+                filterss.push({filter: f.filter.value, value: f.value.value});
+            }
+
+            return filterss;
+        }
+        let submit = document.createElement("a");
+        submit.innerText = "Update";
+        sortByDiv.appendChild(submit);
+        submit.addEventListener("click", ()=>{this.loadAggregateView(grabFilters())})
+        sortByDiv.appendChild((()=>{let s = document.createElement("br"); return s})());
+
+        if (filters !== undefined)
+        {
+            for (const f of filters)
+            {
+                appendFilter(f);
+            }
+        }
+        else
+        {
+            appendFilter();
         }
         // Create list of all entries
         let tmpResults = [...this.results];
-        if (filter !== undefined)
+        if (filters !== undefined)
         {
-            console.log(filter, value)
-            switch (filter)
+            for (const f of filters)
             {
-                case "Whistle":
-                    value = value.toLowerCase();
-                    switch (value)
-                    {
-                        case "true":
-                            tmpResults = tmpResults.filter(v=>v.canWhistle == true);
-                            break;
-                        case "false":
-                            tmpResults = tmpResults.filter(v=>v.canWhistle == false);
-                            break;
-                        default: break;
-                    }
-                    break;
-                case "Sex":
-                    tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0].sex.toLowerCase() == value.toLowerCase());
-                    break;
-                case "Age":
-                    tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0].age == value);
-                    break;
-                case "Music BG":
-                    tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0]["music-background"] == value);
-                    break;
-                case "Pitch ID":
-                    tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0]["pitch-id-skills"] == value);
-                    break;
-                default:
-                    console.log("undefined filter");
-                    break;
+                const filter = f.filter;
+                let value = f.value;
+                switch (filter)
+                {
+                    case "Whistle":
+                        value = value.toLowerCase();
+                        switch (value)
+                        {
+                            case "true":
+                                tmpResults = tmpResults.filter(v=>v.canWhistle == true);
+                                break;
+                            case "false":
+                                tmpResults = tmpResults.filter(v=>v.canWhistle == false);
+                                break;
+                            default: 
+                                tmpResults = [];
+                                break;
+                        }
+                        break;
+                    case "Sex":
+                        tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0].sex.toLowerCase() == value.toLowerCase());
+                        break;
+                    case "Age":
+                        tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0].age == value);
+                        break;
+                    case "Music BG":
+                        tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0]["music-background"] == value);
+                        break;
+                    case "Pitch ID":
+                        tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0]["pitch-id-skills"] == value);
+                        break;
+                    default:
+                        console.log("undefined filter: ", filter);
+                        tmpResults = [];
+                        break;
+                }
             }
         }
         for (const result of tmpResults)
