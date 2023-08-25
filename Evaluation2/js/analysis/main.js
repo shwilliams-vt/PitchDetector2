@@ -316,9 +316,103 @@ export default class AnalysisTool
 
     }
 
-    async loadAggregateView()
+    async loadAggregateView(filter, value)
     {
+        this.content.innerHTML = "";
 
+        // Create sort by dropdown
+        const sortByDiv = document.createElement("div");
+        this.content.appendChild(sortByDiv);
+        {
+            sortByDiv.appendChild((()=>{let s = document.createElement("span"); s.innerText = "Filter where : "; return s})())
+            let query = document.createElement("select");
+            sortByDiv.appendChild(query);
+            const options = [
+                "Whistle",
+                "Sex",
+                "Age",
+                "Music BG",
+                "Pitch ID"
+            ];
+
+            for (const o of options)
+            {
+                let s = document.createElement("option");
+                s.innerText = o;
+                s.value = o;
+                query.appendChild(s);
+            }
+
+            if (filter !== undefined)
+            {
+                query.value = filter;
+            }
+
+            const label = document.createElement("span");
+            label.innerText = " = ";
+            sortByDiv.appendChild(label)
+
+            let queryValue = document.createElement("input");
+            queryValue.setAttribute("type", "text");
+            sortByDiv.appendChild(queryValue);
+            
+            let submit = document.createElement("a");
+            submit.innerText = "Update";
+            sortByDiv.appendChild(submit);
+            submit.addEventListener("click", ()=>{this.loadAggregateView(query.value, queryValue.value)})
+        }
+        // Create list of all entries
+        let tmpResults = [...this.results];
+        if (filter !== undefined)
+        {
+            console.log(filter, value)
+            switch (filter)
+            {
+                case "Whistle":
+                    value = value.toLowerCase();
+                    switch (value)
+                    {
+                        case "true":
+                            tmpResults = tmpResults.filter(v=>v.canWhistle == true);
+                            break;
+                        case "false":
+                            tmpResults = tmpResults.filter(v=>v.canWhistle == false);
+                            break;
+                        default: break;
+                    }
+                    break;
+                case "Sex":
+                    tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0].sex.toLowerCase() == value.toLowerCase());
+                    break;
+                case "Age":
+                    tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0].age == value);
+                    break;
+                case "Music BG":
+                    tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0]["music-background"] == value);
+                    break;
+                case "Pitch ID":
+                    tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0]["pitch-id-skills"] == value);
+                    break;
+                default:
+                    console.log("undefined filter");
+                    break;
+            }
+        }
+        for (const result of tmpResults)
+        {
+            let newDiv = document.createElement("div");
+
+            newDiv.innerHTML += `<span>ID: ${result.id}</span>`;
+            newDiv.innerHTML += `<span>Whistle: ${result.canWhistle}</span>`;
+            newDiv.innerHTML += `<span>Sex: ${Object.values(result.surveys)[0].sex}</span>`;
+            newDiv.innerHTML += `<span>Age: ${Object.values(result.surveys)[0].age}</span>`;
+            newDiv.innerHTML += `<span>Music BG: ${Object.values(result.surveys)[0]["music-background"]}/5</span>`;
+            newDiv.innerHTML += `<span>Pitch ID: ${Object.values(result.surveys)[0]["pitch-id-skills"]}/5</span>`;
+
+            newDiv.classList.add("individual-result-list");
+            newDiv.addEventListener("click", ()=>this.loadIndividualResult.bind(this)(result.id))
+            this.content.appendChild(newDiv);
+        }
     }
 
     async loadIndividualView(filter)
@@ -466,7 +560,6 @@ export default class AnalysisTool
     {
 
         await this.loadFiles();
-        await this.collectData();
         await this.draw();
         await this.setMode("individual");
     }
