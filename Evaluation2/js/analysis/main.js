@@ -347,9 +347,23 @@ export default class AnalysisTool
                 query.appendChild(s);
             }
 
-            const label = document.createElement("span");
-            label.innerText = " = ";
-            sortByDiv.appendChild(label)
+            let domEqStuff = document.createElement("select");
+            sortByDiv.appendChild(domEqStuff)
+            const eqStuff = [
+                "===",
+                "==",
+                "<",
+                "<=",
+                ">",
+                ">="
+            ];
+            for (const o of eqStuff)
+            {
+                let s = document.createElement("option");
+                s.innerText = o;
+                s.value = o;
+                domEqStuff.appendChild(s);
+            }
 
             let queryValue = document.createElement("input");
             queryValue.setAttribute("type", "text");
@@ -358,6 +372,7 @@ export default class AnalysisTool
             if (f !== undefined)
             {
                 query.value = f.filter;
+                domEqStuff.value = f.comparison;
                 queryValue.value = f.value;
             }
 
@@ -368,7 +383,7 @@ export default class AnalysisTool
 
             sortByDiv.appendChild((()=>{let s = document.createElement("br"); return s})());
 
-            newFilters.push({filter: query, value: queryValue});
+            newFilters.push({filter: query, comparison: domEqStuff, value: queryValue});
             
         }
         function grabFilters()
@@ -377,7 +392,7 @@ export default class AnalysisTool
 
             for (const f of newFilters)
             {
-                filterss.push({filter: f.filter.value, value: f.value.value});
+                filterss.push({filter: f.filter.value, comparison:f.comparison.value, value: f.value.value});
             }
 
             return filterss;
@@ -401,11 +416,18 @@ export default class AnalysisTool
         }
         // Create list of all entries
         let tmpResults = [...this.results];
+
+        const presurvey = function(result)
+        {
+            return Object.values(result.surveys)[0];
+        }
+
         if (filters !== undefined)
         {
             for (const f of filters)
             {
                 const filter = f.filter;
+                let comparison = f.comparison;
                 let value = f.value;
                 switch (filter)
                 {
@@ -425,16 +447,32 @@ export default class AnalysisTool
                         }
                         break;
                     case "Sex":
-                        tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0].sex.toLowerCase() == value.toLowerCase());
+                        tmpResults = tmpResults.filter(v=>{
+                            const resultValue = presurvey(v)["sex"].toLowerCase();
+                            const filterValue = value.toLowerCase();
+                            return new Function("a","b", `return a ${comparison} b`)(resultValue, filterValue);
+                            });
                         break;
                     case "Age":
-                        tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0].age == value);
+                        tmpResults = tmpResults.filter(v=>{
+                            const resultValue = presurvey(v)["age"];
+                            const filterValue = value;
+                            return new Function("a","b", `return a ${comparison} b`)(resultValue, filterValue);
+                            });
                         break;
                     case "Music BG":
-                        tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0]["music-background"] == value);
+                        tmpResults = tmpResults.filter(v=>{
+                                const resultValue = presurvey(v)["music-background"];
+                                const filterValue = value;
+                                return new Function("a","b", `return a ${comparison} b`)(resultValue, filterValue);
+                            });
                         break;
                     case "Pitch ID":
-                        tmpResults = tmpResults.filter(v=>Object.values(v.surveys)[0]["pitch-id-skills"] == value);
+                        tmpResults = tmpResults.filter(v=>{
+                                const resultValue = presurvey(v)["pitch-id-skills"];
+                                const filterValue = value;
+                                return new Function("a","b", `return a ${comparison} b`)(resultValue, filterValue);
+                            });
                         break;
                     default:
                         console.log("undefined filter: ", filter);
@@ -450,6 +488,52 @@ export default class AnalysisTool
 
         // Create some basic overview things
         let totalNum = tmpResults.length;
+
+        summary.totalNum = totalNum;
+
+        // Create pseudo record
+        summary["surveys"] = {};
+        summary["results"] = {};
+
+        // Do surveys first
+        let surveyNum = 0;
+        for (const survey of Object.values(this.results[0]["surveys"]))
+        {
+            if (surveyNum > 0)
+            {
+                //console.log(survey);
+
+                for (const answer of Object.values(survey))
+                {
+                    if (!isNaN(parseInt(answer)))
+                    {
+                        //console.log(answer)
+                    }
+                }
+
+            }
+            surveyNum++;
+        }
+
+        // Then results
+        for (const phaseName of Object.keys(this.results[0]["results"]))
+        {
+            const phase = this.results[0]["results"][phaseName];
+            // console.log(phase);
+
+            summary["results"][phaseName] = {};
+
+            for (const roundName of Object.keys(phase))
+            {
+                // const round = phase[roundName];
+
+                summary["results"][phaseName][roundName] = [];
+            }
+        }
+
+        // console.log(summary)
+        // console.log(this.results[0])
+
 
         let sexVals = [
             ["Male", 0],
@@ -484,6 +568,9 @@ export default class AnalysisTool
             [0, 0],[1, 0],[2, 0],[3, 0],[4, 0],[5, 0]
         ];
 
+        // Also record the avg results
+        
+
         for (const result of tmpResults)
         {
 
@@ -504,7 +591,33 @@ export default class AnalysisTool
 
             // Pitch ID
             pitchIDSkillsVals.find(v=>v[0]===Object.values(result.surveys)[0]["pitch-id-skills"])[1]++;
+
+            // Phases (results)
+            for (const phaseName of Object.keys(result["results"]))
+            {
+                const phase = result["results"][phaseName];
+
+                for (const roundName of Object.keys(phase))
+                {
+                    const round = phase[roundName];
+
+                    // console.log(roundName)
+                    // console.log(round)
+
+                    for (const test of round)
+                    {
+                        summary["results"][phaseName][roundName].push({time:test.time}); // sum val, 
+                    }
+
+                }
+            }
         }
+
+        let num = document.createElement("span");
+        num.innerHTML = `<br><h2>Showing ${totalNum} of ${this.results.length} records (${roundN((100 * totalNum / this.results.length), 2)}% included)</h2><br>`
+        this.content.appendChild(num);
+
+        this.content.appendChild((()=>{let d = document.createElement("div");d.innerHTML = "<h3>Survey Results</h3>"; return d})());
 
         // Now draw them
         const drawMacroChart = async function (name, vals)
@@ -547,7 +660,22 @@ export default class AnalysisTool
         // Pitch ID
         await drawMacroChart("Pitch ID", pitchIDSkillsVals);
         
+        this.content.appendChild((()=>{let d = document.createElement("div");d.innerHTML = "<h3>Phase Results</h3>"; return d})());
 
+        for (const phaseName of Object.keys(summary["results"]))
+        {
+            let phaseResults = document.createElement("div");
+            let pNDiv = document.createElement("h4");
+            pNDiv.innerHTML = phaseName;
+            this.content.appendChild(pNDiv);
+            this.content.appendChild(phaseResults);
+
+            loadPhase({phaseContent: phaseResults, phase: summary["results"][phaseName]});
+            // phaseResults.innerHTML += "<br/>"
+        }
+        
+
+        this.content.appendChild((()=>{let d = document.createElement("div");d.innerHTML = "<h3>Resulting Items</h3>"; return d})());
 
         for (const result of tmpResults)
         {
