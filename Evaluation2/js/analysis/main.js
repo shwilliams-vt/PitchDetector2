@@ -620,13 +620,18 @@ export default class AnalysisTool
         this.content.appendChild((()=>{let d = document.createElement("div");d.innerHTML = "<h3>Survey Results</h3>"; return d})());
 
         // Now draw them
-        const drawMacroChart = async function (name, vals)
+        const drawMacroChart = async function (name, vals, whereTo)
         {
+
+            if (whereTo === undefined)
+            {
+                whereTo = this.content;
+            }
             let d = document.createElement("div");
             d.style.width = "500px";
             d.style.height = "500px";
             d.style.display = "inline-block";
-            this.content.appendChild(d);
+            whereTo.appendChild(d);
 
             await UTILS.waitOneFrame();
 
@@ -672,6 +677,92 @@ export default class AnalysisTool
 
             loadPhase({phaseContent: phaseResults, phase: summary["results"][phaseName]});
             // phaseResults.innerHTML += "<br/>"
+        }
+
+        // Custom view thing
+        let customView = document.createElement("div");
+        customView.appendChild((()=>{let h = document.createElement("h3"); h.innerText = "Custom View"; return h})())
+        this.content.appendChild(customView);
+        {
+            // Get queried stuff from filtered results
+            function getQueriedStuff(sn, q)
+            {
+                let responses = [];
+                for (const result of tmpResults)
+                {
+                    const survey = Object.values(result["surveys"])[parseInt(sn)];
+                    const response = survey[q];
+
+                    let found = false;
+                    let foundResult = undefined;
+                    for (const r of responses)
+                    {
+                        if (r.key === response)
+                        {
+                            found = true;
+                            foundResult = r;
+                            break;
+                        }
+                    }
+                    if (found)
+                    {
+                        foundResult.num++;
+                    }
+                    else
+                    {
+                        responses.push({key: response, num: 1});
+                    }
+                }
+
+                let result = [];
+                for (const r of responses)
+                {
+                    result.push(Object.values(r));
+                }
+                return result;
+            }
+            // Add to custom view
+            async function createCustomView(sn, q)
+            {
+                let frame = document.createElement("div");
+                await drawMacroChart(q, getQueriedStuff(sn, q), customView)
+                customView.appendChild(frame);
+                createAddCustomViewButton();
+            }
+            // Create custom view query
+            function createCustomViewQuery()
+            {
+                let query = document.createElement("div");
+                query.innerHTML += "<span>Survey Number: </span>"
+                
+                let sn = document.createElement("input");
+                sn.setAttribute("type", "text");
+                query.appendChild(sn);
+
+                query.appendChild((()=>{let s = document.createElement("span");s.innerText="Query/Question/Key: ";return s;})());
+
+                let q = document.createElement("input");
+                q.setAttribute("type", "text");
+                query.appendChild(q);
+
+                let sbmt = document.createElement("button");
+                sbmt.innerText = "Submit";
+                sbmt.addEventListener("click", ()=>{console.log(sn);console.log(q);createCustomView(sn.value, q.value)})
+                query.appendChild(sbmt);
+
+                customView.appendChild(query);
+            }
+            // Add ability to create anotha one
+            function createAddCustomViewButton ()
+            {
+                let btn = document.createElement("button");
+                btn.innerText = "Add a custom view";
+                btn.addEventListener("click", createCustomViewQuery);
+                customView.appendChild(btn);
+            }
+            
+            createAddCustomViewButton();
+            // createCustomView(<survey num>, <query>);
         }
         
 
