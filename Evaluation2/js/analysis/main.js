@@ -691,7 +691,14 @@ export default class AnalysisTool
                 for (const result of tmpResults)
                 {
                     const survey = Object.values(result["surveys"])[parseInt(sn)];
+
+                    if (!survey)
+                    continue;
+
                     const response = survey[q];
+
+                    if (!response)
+                    continue;
 
                     let found = false;
                     let foundResult = undefined;
