@@ -679,10 +679,10 @@ export default class AnalysisTool
             // phaseResults.innerHTML += "<br/>"
         }
 
-        // Custom view thing
-        let customView = document.createElement("div");
-        customView.appendChild((()=>{let h = document.createElement("h3"); h.innerText = "Custom View"; return h})())
-        this.content.appendChild(customView);
+        // Custom numerical view thing
+        let customNumericalView = document.createElement("div");
+        customNumericalView.appendChild((()=>{let h = document.createElement("h3"); h.innerText = "Custom Numerical View"; return h})())
+        this.content.appendChild(customNumericalView);
         {
             // Get queried stuff from filtered results
             function getQueriedStuff(sn, q)
@@ -729,15 +729,15 @@ export default class AnalysisTool
                 return result;
             }
             // Add to custom view
-            async function createCustomView(sn, q)
+            async function createCustomNumericalView(sn, q)
             {
                 let frame = document.createElement("div");
-                await drawMacroChart(q, getQueriedStuff(sn, q), customView)
-                customView.appendChild(frame);
-                createAddCustomViewButton();
+                await drawMacroChart(q, getQueriedStuff(sn, q), customNumericalView)
+                customNumericalView.appendChild(frame);
+                createAddCustomNumericalViewButton();
             }
             // Create custom view query
-            function createCustomViewQuery()
+            function createCustomNumericalViewQuery()
             {
                 let query = document.createElement("div");
                 query.innerHTML += "<span>Survey Number: </span>"
@@ -754,21 +754,117 @@ export default class AnalysisTool
 
                 let sbmt = document.createElement("button");
                 sbmt.innerText = "Submit";
-                sbmt.addEventListener("click", ()=>{console.log(sn);console.log(q);createCustomView(sn.value, q.value)})
+                sbmt.addEventListener("click", ()=>{console.log(sn);console.log(q);createCustomNumericalView(sn.value, q.value)})
                 query.appendChild(sbmt);
 
-                customView.appendChild(query);
+                customNumericalView.appendChild(query);
             }
             // Add ability to create anotha one
-            function createAddCustomViewButton ()
+            function createAddCustomNumericalViewButton ()
             {
                 let btn = document.createElement("button");
-                btn.innerText = "Add a custom view";
-                btn.addEventListener("click", createCustomViewQuery);
-                customView.appendChild(btn);
+                btn.innerText = "Add a custom numerical view";
+                btn.addEventListener("click", createCustomNumericalViewQuery);
+                customNumericalView.appendChild(btn);
             }
             
-            createAddCustomViewButton();
+            createAddCustomNumericalViewButton();
+            // createCustomView(<survey num>, <query>);
+        }
+
+        // Custom descriptive view thing
+        let customDescriptiveView = document.createElement("div");
+        customDescriptiveView.appendChild((()=>{let h = document.createElement("h3"); h.innerText = "Custom Descriptive View"; return h})())
+        this.content.appendChild(customDescriptiveView);
+        {
+            // Get queried stuff from filtered results
+            function getQueriedStuff(sn, q)
+            {
+                let responses = [];
+                for (const result of tmpResults)
+                {
+                    const survey = Object.values(result["surveys"])[parseInt(sn)];
+
+                    if (!survey)
+                    continue;
+
+                    const response = survey[q];
+
+                    if (!response)
+                    continue;
+
+                    responses.push(response);
+                }
+
+                return responses;
+            }
+            // Add to custom view
+            async function createCustomDescriptiveView(sn, q)
+            {
+                let stuff = getQueriedStuff(sn, q);
+                if (stuff.length == 0)
+                {
+                    window.alert(`No results found for query: ${q} in survey number ${sn}.`);
+                }
+                else
+                {
+                    // Create text file with results
+                    let fString = `Number,${q}\n`;
+                    let i = 1;
+                    stuff.forEach(thing=>{
+                        fString += `${i},${thing}\n`;
+                        i++;
+                    })
+
+                    const blob = new Blob([fString], {type: 'text/csv'});
+                    const filename = `results-q-${q}-sn-${sn}.csv`;
+                    if(window.navigator.msSaveOrOpenBlob) {
+                        window.navigator.msSaveBlob(blob, filename);
+                    }
+                    else{
+                        const elem = window.document.createElement('a');
+                        elem.href = window.URL.createObjectURL(blob);
+                        elem.download = filename;        
+                        document.body.appendChild(elem);
+                        elem.click();        
+                        document.body.removeChild(elem);
+                    }
+                    // createAddCustomDescriptiveViewButton();
+                }
+            }
+            // Create custom view query
+            function createCustomDescriptiveViewQuery()
+            {
+                let query = document.createElement("div");
+                query.innerHTML += "<span>Survey Number: </span>"
+                
+                let sn = document.createElement("input");
+                sn.setAttribute("type", "text");
+                query.appendChild(sn);
+
+                query.appendChild((()=>{let s = document.createElement("span");s.innerText="Query/Question/Key: ";return s;})());
+
+                let q = document.createElement("input");
+                q.setAttribute("type", "text");
+                query.appendChild(q);
+
+                let sbmt = document.createElement("button");
+                sbmt.innerText = "Submit";
+                sbmt.addEventListener("click", ()=>{console.log(sn);console.log(q);createCustomDescriptiveView(sn.value, q.value)})
+                query.appendChild(sbmt);
+
+                customDescriptiveView.appendChild(query);
+            }
+            // Add ability to create anotha one
+            function createAddCustomDescriptiveViewButton ()
+            {
+                let btn = document.createElement("button");
+                btn.innerText = "Add a custom descriptive view";
+                btn.addEventListener("click", createCustomDescriptiveViewQuery);
+                customDescriptiveView.appendChild(btn);
+            }
+            
+            createAddCustomDescriptiveViewButton();
             // createCustomView(<survey num>, <query>);
         }
         
