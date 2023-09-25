@@ -105,6 +105,22 @@ space
     height: 100%;
 }
 
+.spinning
+{
+    animation-name: spin;
+    animation-duration: 4000ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+@keyframes spin {
+    from {
+        transform:rotate(360deg);
+    }
+    to {
+        transform:rotate(0deg);
+    }
+}
+
 .img-fit
 {
     display: inline-block;

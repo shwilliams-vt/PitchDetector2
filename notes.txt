@@ -1,4 +1,6 @@
 For official study
-Use Smoothness 45 and precision 0, based on low avg time and low std deviation from prelim
 
-was 30, 45, 60 smoothness off of 0 or 1 precision
+Use Smoothness 45 and precision 0, based on low avg time and low std deviation from prelim
+    was 30, 45, 60 smoothness off of 0 or 1 precision
+Changed presurvey mic to fixed options
+Added prelim folder but still did the above changes to it

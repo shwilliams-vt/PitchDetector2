@@ -1,0 +1,43 @@
+{
+    "title": "Round 1",
+    "control": false,
+    "recordInterval": 100,
+    "description": "Please use the NVVI tool with whistling to move the bottom slider's position so that it aligns, as close as you wish, with the top slider's position.",
+    "pitchControllerSettings":
+    {
+        "frameSize": 1024,
+        "sampleRate": 44100,
+        "processingMode": "EXP",
+        "smoothness": 45,
+        "precision": 0,
+        "transientWindowTime": 370,
+        "processingRate": 512,
+        "weight": 25 
+    },
+    "tests": [
+        {
+            "resolution": 500,
+            "randomStart": true,
+            "randomEnd": true,
+            "startFromLast": false,
+            "startValue": "NaN",
+            "endValue": "NaN"
+        },
+        {
+            "resolution": 500,
+            "randomStart": true,
+            "randomEnd": true,
+            "startFromLast": false,
+            "startValue": "NaN",
+            "endValue": "NaN"
+        },
+        {
+            "resolution": 500,
+            "randomStart": true,
+            "randomEnd": true,
+            "startFromLast": false,
+            "startValue": "NaN",
+            "endValue": "NaN"
+        }
+    ]
+}

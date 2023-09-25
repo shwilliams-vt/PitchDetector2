@@ -47,9 +47,19 @@
         },
         {
             "id" : "mic-type",
-            "question" : "Explain your microphone setup. Are you using a built-in laptop microphone? A stand-alone microphone? A headset microphone?",
-            "type" : "textarea",
-            "validate" : "return (value.length >= 3)"
+            "question" : "Please choose the closest microphone type to the one you are currently using for this study.",
+            "type" : "list",
+            "extra-params" : 
+            {
+                "options" :[
+                    "Built-in laptop/PC microphone",
+                    "Headset microphone",
+                    "Stand-alone/studio microphone (including USB microphones)",
+                    "Webcam microphone",
+                    "Mobile device microphone (e.g. iPhone)",
+                    "Other"
+                ]
+            }
         },
         {
             "id" : "nvvi-background",

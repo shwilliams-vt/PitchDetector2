@@ -20,9 +20,7 @@ params.onStart = async function()
     const evalParams = {
         domElem: document.getElementById("phase4"),
         rounds: [
-            "./rounds/official/phase4/round1.json",
-            "./rounds/official/phase4/round2.json",
-            "./rounds/official/phase4/round3.json"
+            "./rounds/official/phase4/round1.json"
         ]
     };
 

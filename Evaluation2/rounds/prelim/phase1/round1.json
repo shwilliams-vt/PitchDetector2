@@ -1,15 +1,15 @@
 {
-    "title": "Round 6",
+    "title": "Round 1",
     "control": false,
     "recordInterval": 100,
-    "description": "Please use the NVVI tool with your choice of whistling or humming to move the bottom slider's position so that it aligns, as close as you wish, with the top slider's position.",
+    "description": "Please use the NVVI tool with humming to move the bottom slider's position so that it aligns, as close as you wish, with the top slider's position.",
     "pitchControllerSettings":
     {
         "frameSize": 1024,
         "sampleRate": 44100,
         "processingMode": "EXP",
-        "smoothness": 60,
-        "precision": 1,
+        "smoothness": 45,
+        "precision": 0,
         "transientWindowTime": 370,
         "processingRate": 512,
         "weight": 25 
