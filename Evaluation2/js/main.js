@@ -13,6 +13,8 @@ EVAL.surveys = {};
 EVAL.results = {};
 EVAL.canWhistle = true;
 
+EVAL.SERVER_URI = "wss://iot.cs.vt.edu:31137";
+
 EVAL.generateJSON = function()
 {
     let obj = {};

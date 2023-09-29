@@ -28,7 +28,7 @@ params.onStart = async () =>
     // UTILS.downloadJSON(EVAL.generateJSON())
     const results = EVAL.generateJSON();
 
-    let ws = new WebSocket("wss://iot.cs.vt.edu:31137");
+    let ws = new WebSocket(EVAL.SERVER_URI);
 
     ws.addEventListener("open", e=>{
         ws.send(JSON.stringify(results));

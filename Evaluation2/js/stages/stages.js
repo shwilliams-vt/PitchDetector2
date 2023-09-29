@@ -1,4 +1,5 @@
 import * as UTILS from "../util.js"
+import web_check from "./web-check.js"
 import welcome from "./welcome.js"
 import introduction from "./introduction.js"
 import consent from "./consent.js"
@@ -28,6 +29,7 @@ export default
 {
     i: 0,
     stages:  [
+        web_check,
         welcome, 
         introduction, 
         consent, 
