@@ -134,6 +134,47 @@ class Question
                 });
 
                 break;
+            case "tlx":
+                this.slider = document.createElement("input");
+                // 21 pt tlx
+                this.slider.setAttribute("type", "range");
+                this.slider.setAttribute("min", 0);
+                this.slider.setAttribute("max", 20);
+                this.slider.value = 10;
+
+                this.datalist = document.createElement("datalist");
+                for (let i = 0; i < 21; i++)
+                {
+                    const doe = document.createElement("option");
+                    doe.innerText = i;
+                    doe.setAttribute("value", i)
+                    this.datalist.appendChild(doe);
+                }
+                this.datalist.setAttribute("id", "tlx-dl");
+
+                this.labelDiv = document.createElement("div");
+                this.labelDiv.style.width = "100%;";
+
+                let left = document.createElement("span");
+                left.innerText = "Very Low";
+                left.style.float = "left";
+                this.labelDiv.appendChild(left);
+
+                let right = document.createElement("span");
+                right.innerText = "Very High";
+                right.style.float = "right"
+                this.labelDiv.appendChild(right);
+
+                this.domElem.appendChild(this.slider);
+                this.domElem.appendChild(this.datalist);
+                this.domElem.appendChild(this.labelDiv);
+
+                this.domElem.style.textAlign = "center";
+
+                this.slider.setAttribute("list", "tlx-dl");
+                this.slider.addEventListener("input", scope.callback);
+
+                break;
             case "likert":
                 this.form = document.createElement("form");
                 this.domElem.appendChild(this.form);
@@ -218,6 +259,8 @@ class Question
                 return this.form.value;
             case "likert":
                 return this.form.value;
+            case "tlx":
+                return this.slider.value;
             default:
                 return undefined;
         }

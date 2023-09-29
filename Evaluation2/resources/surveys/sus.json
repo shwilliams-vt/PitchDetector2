@@ -1,0 +1,57 @@
+{
+    "title" : "System Usability Scale (SUS) Questionnaire",
+    "label" : "Please answer the following questions regarding the previous tasks performed with the NVVI tool to the extent you agree with them. Read each question carefully.",
+    "questions" : 
+    [
+        {
+            "id" : "sus-frequently",
+            "question" : "I think that I would like to use this system frequently.",
+            "type" : "likert"
+        },
+        {
+            "id" : "sus-complexity",
+            "question" : "I found the system unnecessarily complex.",
+            "type" : "likert"
+        },
+        {
+            "id" : "sus-easy",
+            "question" : "I thought the system was easy to use.",
+            "type" : "likert"
+        },
+        {
+            "id" : "sus-support",
+            "question" : "I think that I would need the support of a technical person to be able to use this system.",
+            "type" : "likert"
+        },
+        {
+            "id" : "sus-functionality",
+            "question" : "I found the various functions in this system were well integrated.",
+            "type" : "likert"
+        },
+        {
+            "id" : "sus-inconsistency",
+            "question" : "I thought there was too much inconsistency in this system.",
+            "type" : "likert"
+        },
+        {
+            "id" : "sus-learnability",
+            "question" : "I would imagine that most people would learn to use this system very quickly.",
+            "type" : "likert"
+        },
+        {
+            "id" : "sus-cumbersome",
+            "question" : "I found the system very cumbersome to use.",
+            "type" : "likert"
+        },
+        {
+            "id" : "sus-confidence",
+            "question" : "I felt very confident using the system.",
+            "type" : "likert"
+        },
+        {
+            "id" : "sus-accessibility",
+            "question" : "I needed to learn a lot of things before I could get going with this system.",
+            "type" : "likert"
+        }
+    ]
+}

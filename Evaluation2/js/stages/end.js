@@ -3,6 +3,8 @@ import * as UTILS from "../util.js";
 
 const params = {};
 
+const endCode = "g0H0kies"
+
 function onSendResultsSuccess()
 {
     document.getElementById("an-h2").innerText = "Finished!";
@@ -10,6 +12,7 @@ function onSendResultsSuccess()
     document.getElementById("an-icon").innerText = "waving_hand";
     document.getElementById("send-results-status").innerHTML = "Well done! Thank you for participating in the study. Your resulting evaluation data has been successfully received by the server."
     document.getElementById("send-results-status").innerHTML += "<br/><br/>Please record your ID, located at the top left of the screen.";
+    document.getElementById("send-results-status").innerHTML += `<br/><br/>Your code for credit for participation in this study is: ${endCode}`;
 }
 
 function onSendResultsError(e)
@@ -20,6 +23,7 @@ function onSendResultsError(e)
     document.getElementById("send-results-status").innerHTML = "Uh oh. There appears to have been an error. Please reach out to a study administrator and tell them you saw this message."
     document.getElementById("send-results-status").innerHTML += "<br/><br/>Error: " + ((e.code ? e.code : (e.data ? e.data : e)) + "");
     document.getElementById("send-results-status").innerHTML += "<br/><br/>Please also record your ID, located at the top left of the screen.";
+    document.getElementById("send-results-status").innerHTML += `<br/><br/>Your code for credit for participation in this study is: ${endCode}`;
 }
 
 params.resource = "end";
