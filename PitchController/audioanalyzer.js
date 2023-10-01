@@ -1663,6 +1663,11 @@ class WorkletAnalyzer extends AudioWorkletProcessor
     processEXP()
     {
         // We have some good algorithms
+
+        this.processACF3();
+
+        return;
+
         // First do time domain O(n) analysis to determine which route to take
 
         for (let i = 0; i < this.frameSize; i++)
@@ -1751,7 +1756,8 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         const minFFTAnalysis = 600; // Hz
         if (f > minFFTAnalysis)
         {
-            this.processWhistle();
+            // this.processWhistle();
+            this.processACF3();
             // this.processEXPWorking();
             // console.log(" > " + minFFTAnalysis);
         }
@@ -1784,18 +1790,37 @@ class WorkletAnalyzer extends AudioWorkletProcessor
             }
         }
 
-        // Get rid of first band
-        for (let i = 0; i < 90; i++)
+        
+
+        // Clear negatives
+        for (let i = 0; i < this.frameSize; i++)
         {
-            this.ACFbuffer[i] = 0.00;
+            this.ACFbuffer[i] = this.ACFbuffer[i] > 0 ? this.ACFbuffer[i] : 0;
+        }
+
+        // Get rid of first band
+        for (let i = 1; i < this.frameSize; i++)
+        {
+            if (this.ACFbuffer[i] < this.ACFbuffer[i-1])
+            {
+                this.ACFbuffer[i-1] = 0.0;
+            }
+            else
+            {
+                break;
+            }
         }
 
         let maxNum = Math.max(...this.ACFbuffer);
 
         normalize(this.ACFbuffer);
 
-        let peaks = getPeaks(this.ACFbuffer, this.frameSize, 0.5, true);
-        let v = parabolicInterpolationX(this.ACFbuffer, peaks[0]);
+        let peaks = getPeaks(this.ACFbuffer, this.frameSize, 0.99, true);
+        let probablePeak = peaks[0];
+
+        // Check for harmonic peak if low freq TODO
+        
+        let v = parabolicInterpolationX(this.ACFbuffer, probablePeak);
 
         // let v = getNthPeakBin(this.ACFbuffer, 1, 0.4);
       

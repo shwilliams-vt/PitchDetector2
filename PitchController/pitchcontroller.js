@@ -107,7 +107,7 @@ export default class PitchController
         this.lastreports = [];
 
         // Confidenc misses to end session
-        this.maxconfidencemisses = 2;
+        this.maxconfidencemisses = 1;
         this.currconfidencemisses = 0;
 
         // Indicating a "session"
