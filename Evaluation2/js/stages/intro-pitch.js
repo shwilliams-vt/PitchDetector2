@@ -23,11 +23,12 @@ params.onStart = async function()
         {
             "frameSize": 1024,
             "sampleRate": 44100,
-            "processingMode": "ACF",
+            "processingMode": "EXP",
             "smoothness": 40,
             "precision": 0,
             "transientWindowTime": 370,
             "processingRate": 512,
+            "minconfidenceforsession" : 0.5,
             "useTransientToggle":false
         }
     );

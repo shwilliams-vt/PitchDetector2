@@ -33,7 +33,7 @@ params.onStart = async function()
             "frameSize": 1024,
             "sampleRate": 44100,
             "processingMode": "EXP",
-            "smoothness": 40,
+            "smoothness": 60,
             "precision": 0,
             "transientWindowTime": 370,
             "processingRate": 512,
