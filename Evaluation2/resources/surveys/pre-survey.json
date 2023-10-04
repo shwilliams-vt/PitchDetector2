@@ -33,6 +33,19 @@
             }
         },
         {
+            "id" : "disability",
+            "question" : "Do you have a physical disability that impairs your ability to successfully use a computer mouse?",
+            "type" : "list",
+            "extra-params" : 
+            {
+                "options" :[
+                    "Yes",
+                    "No",
+                    "Prefer not to answer"
+                ]
+            }
+        },
+        {
             "id" : "voice-type",
             "question" : "In which of the following categories would you label the average pitch of your speaking voice?",
             "type" : "list",
