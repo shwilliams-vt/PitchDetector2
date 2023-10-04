@@ -34,7 +34,7 @@
         },
         {
             "id" : "disability",
-            "question" : "Do you have a physical disability that impairs your ability to successfully use a computer mouse?",
+            "question" : "Do you have a physical disability that impairs your ability to use a computer mouse?",
             "type" : "list",
             "extra-params" : 
             {
