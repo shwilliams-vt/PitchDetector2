@@ -36,14 +36,15 @@
     const processingRate = 512;
 
     let controller = null;
-
+    let su = 0;
+    let updateSpeed = 4;
     const afterprocessing = function(e)
     {
         let detected = document.getElementById("detected");
         let slider = document.getElementById("freq");
         let block = document.getElementById("test");
 
-        if ("spectrum" in e.data)
+        if ("spectrum" in e.data && su == updateSpeed)
         {
             let spectrum = document.getElementById("spectrum");
 
@@ -51,10 +52,12 @@
             {
                 spectrum.children[i].style.height = (50*e.data.spectrum[i]) + "px";
             } 
+            su = 0;
         }
+        su++;
         
 
-        if ("insession" in e.data && e.data.insession)
+        // if ("insession" in e.data && e.data.insession)
         {
             if ("pitchInfo" in e.data)
             {

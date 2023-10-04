@@ -12,7 +12,7 @@
         "precision": 0,
         "transientWindowTime": 370,
         "processingRate": 512,
-        "weight": 25 
+        "weight": 10 
     },
     "tests": [
         {

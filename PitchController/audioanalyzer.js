@@ -1664,7 +1664,7 @@ class WorkletAnalyzer extends AudioWorkletProcessor
     {
         // We have some good algorithms
 
-        this.processACF3();
+        this.processACF4();
 
         return;
 
@@ -1829,6 +1829,83 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         let a = 100;
         let confidence = 2 * Math.atan(a * maxNum) / Math.PI;
         // console.log(confidence)
+
+        this.postProcess({
+            spectrum: this.ACFbuffer,
+            pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
+        });
+
+    }
+
+    processACF4()
+    {
+        for (let i = 0; i < this.frameSize; i++)
+        {
+            let j = (this.internalBufferSize + this.internalBufferOffset + i - this.frameSize) % this.internalBufferSize;
+
+            this.audioBuffer[i] = this.internalBuffer[j];
+        }
+
+        // normalize(this.audioBuffer);
+        this.ACFbuffer = new Float32Array(this.frameSize);
+
+        for (let i = 0; i < this.frameSize; i++)
+        {
+            for (let j = 0; j < this.frameSize - i; j++)
+            {
+                this.ACFbuffer[j] += this.audioBuffer[i] * this.audioBuffer[i + j];
+            }
+        }
+
+        
+
+        // Clear negatives
+        for (let i = 0; i < this.frameSize; i++)
+        {
+            this.ACFbuffer[i] = this.ACFbuffer[i] > 0 ? this.ACFbuffer[i] : 0;
+        }
+
+        // Get rid of first band
+        for (let i = 1; i < this.frameSize; i++)
+        {
+            if (this.ACFbuffer[i] < this.ACFbuffer[i-1])
+            {
+                this.ACFbuffer[i-1] = 0.0;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        let maxNum = Math.max(...this.ACFbuffer);
+
+        normalize(this.ACFbuffer);
+
+        // let peaks = getPeaks(this.ACFbuffer, this.frameSize, 0.99, true);
+        // let probablePeak = peaks[0];
+
+        // Check for harmonic peak if low freq TODO
+
+        // Index of maximum
+        let probablePeak = this.ACFbuffer.reduce((s,v,i)=> (v >= this.ACFbuffer[s] ? s=i : s=s),0);
+        
+        let v = parabolicInterpolationX(this.ACFbuffer, probablePeak);
+
+        // let v = getNthPeakBin(this.ACFbuffer, 1, 0.4);
+      
+        let pitch = this.sampleRate / v;
+
+        // let a = 100;
+        // let confidence = 2 * Math.atan(a * maxNum) / Math.PI;
+        // Check periodicity for confidence
+        
+
+        // let mean = sums.reduce((s,v)=>s+=v,0) / sums.length;
+        // let sd = sums.reduce((s,v)=>s+=Math.sqrt((v - mean) ** 2),0) / sums.length;
+        maxNum *= 1000;
+        let confidence = Math.atan(maxNum) / Math.PI * 2;
+
 
         this.postProcess({
             spectrum: this.ACFbuffer,
