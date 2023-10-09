@@ -106,7 +106,7 @@ export default class Test
             {
                 if (e.data.insession == true)
                 {
-                    userSlider.value = parseInt(userSlider.value) + e.data.session.deltapitch;
+                    userSlider.value = Math.round(parseInt(userSlider.value) + e.data.session.deltapitch);
                     // onInput(userSlider.value);
                 }
 

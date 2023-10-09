@@ -99,7 +99,7 @@ export default class PitchController
         this.initialized = false; // Must be initialized
 
         // See audio analyzer for explanatinons on these
-        this.processingMode = "ACF";
+        this.processingMode = "EXP";
         this.smoothness = 0;
         this.precision = 0;
         this.transientwindowtime = 375.1;

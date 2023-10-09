@@ -12,11 +12,11 @@
         "precision": 0,
         "transientWindowTime": 370,
         "processingRate": 512,
-        "weight": 10 
+        "weight": 40
     },
     "tests": [
         {
-            "resolution": 500,
+            "resolution": 1000,
             "randomStart": true,
             "randomEnd": true,
             "startFromLast": false,
@@ -24,7 +24,7 @@
             "endValue": "NaN"
         },
         {
-            "resolution": 500,
+            "resolution": 1000,
             "randomStart": true,
             "randomEnd": true,
             "startFromLast": false,
@@ -32,7 +32,7 @@
             "endValue": "NaN"
         },
         {
-            "resolution": 500,
+            "resolution": 1000,
             "randomStart": true,
             "randomEnd": true,
             "startFromLast": false,
@@ -40,7 +40,7 @@
             "endValue": "NaN"
         },
         {
-            "resolution": 500,
+            "resolution": 1000,
             "randomStart": true,
             "randomEnd": true,
             "startFromLast": false,
@@ -48,7 +48,7 @@
             "endValue": "NaN"
         },
         {
-            "resolution": 500,
+            "resolution": 1000,
             "randomStart": true,
             "randomEnd": true,
             "startFromLast": false,
@@ -56,7 +56,7 @@
             "endValue": "NaN"
         },
         {
-            "resolution": 500,
+            "resolution": 1000,
             "randomStart": true,
             "randomEnd": true,
             "startFromLast": false,
@@ -64,7 +64,7 @@
             "endValue": "NaN"
         },
         {
-            "resolution": 500,
+            "resolution": 1000,
             "randomStart": true,
             "randomEnd": true,
             "startFromLast": false,
@@ -72,7 +72,7 @@
             "endValue": "NaN"
         },
         {
-            "resolution": 500,
+            "resolution": 1000,
             "randomStart": true,
             "randomEnd": true,
             "startFromLast": false,
@@ -80,7 +80,7 @@
             "endValue": "NaN"
         },
         {
-            "resolution": 500,
+            "resolution": 1000,
             "randomStart": true,
             "randomEnd": true,
             "startFromLast": false,
@@ -88,7 +88,7 @@
             "endValue": "NaN"
         },
         {
-            "resolution": 500,
+            "resolution": 1000,
             "randomStart": true,
             "randomEnd": true,
             "startFromLast": false,

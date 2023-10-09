@@ -784,6 +784,8 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         this.transientListenPeriod = 2.0;
         // the time of the last transient detected
         this.timeOfLastTransient = Date.now();
+        // The average volume
+        this.avgVolumeRMS = 0.01;
 
         this.userEnabled = true;
         // When transient found, this is triggered
@@ -971,6 +973,12 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         {
             this.detectTransient();
         }
+
+        // 2. Avg volume
+        let current = Math.sqrt(this.internalBuffer.reduce((s,v)=>s+=(v**2),0) / this.internalBufferSize);
+        let w = 0.001;
+        this.avgVolumeRMS = (w*current + (1-w)*this.avgVolumeRMS);
+        // console.log(this.avgVolumeRMS)
 
         // If we are in a silence, skip processing
         if (this.transientSilence && this.useTransientToggle)
@@ -1664,7 +1672,8 @@ class WorkletAnalyzer extends AudioWorkletProcessor
     {
         // We have some good algorithms
 
-        this.processACF4();
+        // this.processACF4();
+        this.processACF5();
 
         return;
 
@@ -1913,6 +1922,91 @@ class WorkletAnalyzer extends AudioWorkletProcessor
         });
 
     }
+
+    processACF5()
+    {
+        for (let i = 0; i < this.frameSize; i++)
+        {
+            let j = (this.internalBufferSize + this.internalBufferOffset + i - this.frameSize) % this.internalBufferSize;
+
+            this.audioBuffer[i] = this.internalBuffer[j];
+        }
+
+        // normalize(this.audioBuffer);
+        this.ACFbuffer = new Float32Array(this.frameSize);
+
+        for (let i = 0; i < this.frameSize; i++)
+        {
+            for (let j = 0; j < this.frameSize - i; j++)
+            {
+                this.ACFbuffer[j] += this.audioBuffer[i] * this.audioBuffer[i + j];
+            }
+        }
+
+        
+
+        // Clear negatives
+        for (let i = 0; i < this.frameSize; i++)
+        {
+            this.ACFbuffer[i] = this.ACFbuffer[i] > 0 ? this.ACFbuffer[i] : 0;
+        }
+
+        // Get rid of first band
+        for (let i = 1; i < this.frameSize; i++)
+        {
+            if (this.ACFbuffer[i] < this.ACFbuffer[i-1])
+            {
+                this.ACFbuffer[i-1] = 0.0;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        let maxNum = Math.max(...this.ACFbuffer);
+
+        normalize(this.ACFbuffer);
+
+        // let peaks = getPeaks(this.ACFbuffer, this.frameSize, 0.99, true);
+        // let probablePeak = peaks[0];
+
+        // Check for harmonic peak if low freq TODO
+
+        // Index of maximum
+        let probablePeak = this.ACFbuffer.reduce((s,v,i)=> (v >= this.ACFbuffer[s] ? s=i : s=s),0);
+        
+        let v = parabolicInterpolationX(this.ACFbuffer, probablePeak);
+
+        // let v = getNthPeakBin(this.ACFbuffer, 1, 0.4);
+      
+        let pitch = this.sampleRate / v;
+
+        // let a = 100;
+        // let confidence = 2 * Math.atan(a * maxNum) / Math.PI;
+        // Check periodicity for confidence
+        
+
+        // let mean = sums.reduce((s,v)=>s+=v,0) / sums.length;
+        // let sd = sums.reduce((s,v)=>s+=Math.sqrt((v - mean) ** 2),0) / sums.length;
+        maxNum *= 1000;
+        let rms = Math.sqrt(this.audioBuffer.reduce((s,v)=>s+=(v**2),0) / this.frameSize);
+        // let confidence = Math.atan(maxNum) / Math.PI * 2;
+        let a = 4;
+        let r = rms / this.avgVolumeRMS;
+        let confidence = Math.atan(a*r) / Math.PI * 2;
+        // console.log(confidence)
+
+        // console.log(this.avgVolumeRMS)
+
+
+        this.postProcess({
+            spectrum: this.ACFbuffer,
+            pitchInfo: {pitch: Math.round(pitch), confidence:confidence}
+        });
+
+    }
+
 
     processWhistle()
     {
