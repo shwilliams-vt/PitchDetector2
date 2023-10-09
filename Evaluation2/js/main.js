@@ -12,6 +12,7 @@ EVAL.stages = stages;
 EVAL.surveys = {};
 EVAL.results = {};
 EVAL.canWhistle = true;
+EVAL.numTimesHelpClicked = 0;
 
 EVAL.SERVER_URI = "wss://iot.cs.vt.edu:31137";
 
@@ -94,6 +95,51 @@ EVAL.next = function(num)
         }
         help_next(num);
     }
+}
+
+EVAL.help = function (context)
+{
+    // Generate screen
+    let helpElemBG = document.createElement("div");
+    helpElemBG.classList.add("help-elem-bg");
+    document.body.appendChild(helpElemBG);
+    let helpElem = document.createElement("div");
+    helpElem.classList.add("help-elem");
+    helpElemBG.appendChild(helpElem);
+
+    // Generate Text
+    let helpMsgH2 = document.createElement("h2");
+    helpMsgH2.innerText = "Help!";
+    let helpMsg = document.createElement("p");
+
+    // Depends on context
+    if (context === "nvvi")
+    {
+        helpMsg.innerHTML = `
+        <p>To use the tool, make sure you activate it by creating 2 consecutive transient sounds (e.g. clapping.)
+        Then, you may use your pitch to move the slider to the indicated position. When you are done moving the slider, 
+        create 2 transients again to deactivate the tool, which will progress you to the next test. When all tests are 
+        completed, you will finish this round of testing.</p>
+        `;
+    }
+    else if (context === "mouse")
+    {
+        helpMsg.innerHTML = `
+        <p>Please use the mouse to drag the slider to the indicated position, which will progress you to the next test. 
+        When all tests are completed, you will finish this round of testing.</p>
+        `;
+    }
+    
+    let btn = document.createElement("a");
+    btn.innerText = "Got it!";
+    btn.addEventListener("click", ()=>document.body.removeChild(helpElemBG));
+
+    helpElem.appendChild(helpMsgH2);
+    helpElem.appendChild(helpMsg);
+    helpElem.appendChild(btn);
+
+    // Signal help was clicked
+    EVAL.numTimesHelpClicked++;
 }
 
 window.EVAL = EVAL;

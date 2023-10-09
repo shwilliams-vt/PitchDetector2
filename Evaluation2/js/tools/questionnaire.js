@@ -174,6 +174,8 @@ class Question
                 this.slider.setAttribute("list", "tlx-dl");
                 this.slider.addEventListener("input", scope.callback);
 
+                this.complete = true;
+
                 break;
             case "likert":
                 this.form = document.createElement("form");

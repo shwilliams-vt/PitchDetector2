@@ -298,6 +298,8 @@ a:hover
 .questionnaire .no-nav
 {
     background-color: grey;
+    opacity: 0;
+    cursor:initial;
 }
 
 #grant-mic
@@ -305,4 +307,35 @@ a:hover
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+#help-btn
+{
+    padding:0;
+    background-color: white;
+    text-decoration: underline;
+    color:blue;
+}
+.help-elem-bg
+{
+    position: absolute;
+    height: 100vh;
+    width: 100vw;
+    background-color: rgba(0,0,0,0.4);
+    z-index: 4;
+    top:0; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.help-elem
+{
+    background-color: white;
+    width: 50%;
+    height: 70%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
