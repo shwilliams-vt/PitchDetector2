@@ -9,6 +9,12 @@ body
     background-color: white;
 }
 
+.wall > h3
+{
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
 space
 {
     white-space: pre;
@@ -203,6 +209,11 @@ space
 .half-width
 {
     width: 50%;
+}
+
+.three-qtr-width
+{
+    width: 75%;
 }
 .qtr-width
 {
