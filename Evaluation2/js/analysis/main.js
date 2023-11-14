@@ -2,7 +2,49 @@ import * as VIZ from "../tools/viz/viz.js"
 import ChartJS from "../tools/viz/chart.js"
 import * as UTILS from "../util.js";
 
-const MAX_TIME = 15 // s;
+const MAX_TIME = 30 // s;
+
+const config = {
+    phases: 
+    [
+        {
+            name: "phase1",
+            rounds: 
+            [
+                {
+                    name: "Round 1"
+                }
+            ]
+        },
+        {
+            name: "phase2",
+            rounds: 
+            [
+                {
+                    name: "Round 1"
+                }
+            ]
+        },
+        {
+            name: "phase3",
+            rounds: 
+            [
+                {
+                    name: "Round 1"
+                }
+            ]
+        },
+        {
+            name: "phase4",
+            rounds: 
+            [
+                {
+                    name: "Round 1"
+                }
+            ]
+        }
+    ]
+}
 
 async function loadSurvey(s)
 {
@@ -139,12 +181,17 @@ export default class AnalysisTool
         this.jsonFileReader = new FileReader();
         this.results = [];
         this.domElement = document.body;
+        this.loadbar = params.loadbar;
 
         this.init();
     }
 
     async loadFiles()
     {
+        // For load bar 
+        let scope = this;
+        let i = 1;
+        let num = this.params.files.length;
         // Load all files
         await (async ()=>{for (const file of this.params.files) {
 
@@ -160,6 +207,12 @@ export default class AnalysisTool
                 this.jsonFileReader.onload = onRead.bind(this);
 
                 this.jsonFileReader.readAsText(file);
+
+                if (scope.loadbar)
+                {
+                    scope.loadbar.innerHTML = `${i}/${num}`;
+                }
+                i++;
             })
         }})()
     }
@@ -516,18 +569,23 @@ export default class AnalysisTool
         }
 
         // Then results
-        for (const phaseName of Object.keys(this.results[0]["results"]))
+        for (const phaseName of Object.values(config.phases).map(p=>p.name))
         {
-            const phase = this.results[0]["results"][phaseName];
-            // console.log(phase);
+            const phase = config.phases.find(p=>p.name===phaseName);
+            // const phase = this.results[0]["results"][phaseName];
 
             summary["results"][phaseName] = {};
 
-            for (const roundName of Object.keys(phase))
+            // for (const roundName of Object.keys(phase))
+            for (const roundName of phase.rounds)
             {
                 // const round = phase[roundName];
-
-                summary["results"][phaseName][roundName] = [];
+                try {
+                    summary["results"][phaseName][roundName.name] = [];
+                }
+                catch {
+                    console.log("Could not load survey");
+                }
             }
         }
 
@@ -569,7 +627,15 @@ export default class AnalysisTool
         ];
 
         // Also record the avg results
-        
+        function incrementStat(result, stat, key)
+        {
+            let s = stat.find(v=>v[0]===Object.values(result.surveys)[0][key]);
+
+            if (s)
+            {
+                s[1]++;
+            }
+        }
 
         for (const result of tmpResults)
         {
@@ -578,19 +644,24 @@ export default class AnalysisTool
             canWhistleVals.find(v=>v[0]===result.canWhistle)[1]++;
 
             // Sex
-            sexVals.find(v=>v[0]===Object.values(result.surveys)[0].sex)[1]++;
+            // sexVals.find(v=>v[0]===Object.values(result.surveys)[0].sex)[1]++;
+            incrementStat(result, sexVals, "sex");
 
             // Age
-            ageRangeVals.find(v=>v[0]===Object.values(result.surveys)[0].age)[1]++;
+            // ageRangeVals.find(v=>v[0]===Object.values(result.surveys)[0].age)[1]++;
+            incrementStat(result, ageRangeVals, "age");
 
             // Voice type
-            voiceTypeVals.find(v=>v[0]===Object.values(result.surveys)[0]["voice-type"])[1]++;
+            // voiceTypeVals.find(v=>v[0]===Object.values(result.surveys)[0]["voice-type"])[1]++;
+            incrementStat(result, voiceTypeVals, "voice-type");
 
             // Music BG
-            musicBGVals.find(v=>v[0]===Object.values(result.surveys)[0]["music-background"])[1]++;
+            // musicBGVals.find(v=>v[0]===Object.values(result.surveys)[0]["music-background"])[1]++;
+            incrementStat(result, musicBGVals, "music-background");
 
             // Pitch ID
-            pitchIDSkillsVals.find(v=>v[0]===Object.values(result.surveys)[0]["pitch-id-skills"])[1]++;
+            // pitchIDSkillsVals.find(v=>v[0]===Object.values(result.surveys)[0]["pitch-id-skills"])[1]++;
+            incrementStat(result, pitchIDSkillsVals, "pitch-id-skills");
 
             // Phases (results)
             for (const phaseName of Object.keys(result["results"]))
@@ -606,7 +677,12 @@ export default class AnalysisTool
 
                     for (const test of round)
                     {
-                        summary["results"][phaseName][roundName].push({time:test.time}); // sum val, 
+                        try {
+                            summary["results"][phaseName][roundName].push({time:test.time}); // sum val, 
+                        }
+                        catch {
+                            console.log("Could not load survey");
+                        }
                     }
 
                 }

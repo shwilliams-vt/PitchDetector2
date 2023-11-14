@@ -12,6 +12,8 @@
 </head>
 <body>
     <input type="file" id="upload" multiple="true">Upload Result Files</input>
+    <br/>
+    <div id="loadbar"></div>
 </body>
 </html>
 
@@ -23,7 +25,7 @@
     
     load.addEventListener("change", e=>{
 
-        document.body.innerHTML = "";
-        const tool = new AnalysisTool({files:Object.values(e.target.files)})
+        // document.body.innerHTML = "";
+        const tool = new AnalysisTool({files:Object.values(e.target.files), loadbar: document.getElementById("loadbar")})
     })
 </script>
