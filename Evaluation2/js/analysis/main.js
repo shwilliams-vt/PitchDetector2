@@ -2,7 +2,7 @@ import * as VIZ from "../tools/viz/viz.js"
 import ChartJS from "../tools/viz/chart.js"
 import * as UTILS from "../util.js";
 
-const MAX_TIME = 30 // s;
+const MAX_TIME = 90 // s;
 
 const config = {
     phases: 
@@ -67,13 +67,82 @@ function roundN(n, places)
     return Math.round(n * pow10) / pow10;
 }
 
+function classifyGraph(test, n)
+{
+    // Some heuristics
+    const accuracyThreshold = 0.93;
+    const variabilityThreshold = 0.007;
+    const sdThreshold = 0.005;
+
+    const startValue = test.metadata.startValue;
+    const endValue = test.metadata.endValue;
+    const max = test.metadata.max;
+    const min = test.metadata.min;
+    const scale = max - min;
+    // const vari = Math.abs(test.dataPoints.reduce((s,v)=>s+=(v[1] - startValue) / scale, 0)) / test.dataPoints.length;
+    const avg = test.dataPoints.reduce((s,v)=>s+=parseFloat(v[1]), 0) / test.dataPoints.length;
+    const sd = Math.sqrt(test.dataPoints.reduce((s,v)=>s+=((v[1] - avg))**2, 0) / test.dataPoints.length) / scale;
+    const acc = 1 - Math.abs(test.dataPoints[test.dataPoints.length - 1][1] - endValue) / scale;
+    const err = Math.sqrt(test.dataPoints.reduce((s,v)=>s+=((v[1]-endValue)**2), 0)) / test.dataPoints.length / scale;
+    
+    let vari = 0;
+    for (let i = 1; i < test.dataPoints.length; i++)
+    {
+        vari += (test.dataPoints[i][1] - test.dataPoints[i-1][1]) ** 4;
+    }
+    vari = Math.sqrt(vari) / (test.dataPoints.length - 1);
+
+    // console.log(n, vari,sd,acc, err);
+    // console.log(n, vari >= variabilityThreshold, sd >= sdThreshold, acc >= accuracyThreshold)
+    let category = -1;
+    // Now classify
+    if (vari < variabilityThreshold && acc < accuracyThreshold && sd < sdThreshold)
+    {
+        // Two separate lines pretty much
+        category = 1;
+    }
+    else if (vari < variabilityThreshold && acc >= accuracyThreshold && sd < sdThreshold)
+    {
+        // Probably person thought it was close enough
+        category = 2;
+    }
+    else if (vari >= variabilityThreshold && acc < accuracyThreshold && sd < sdThreshold)
+    {
+        // Person tried a little but did not succeed
+        category = 3;
+    }
+    else if (vari >= variabilityThreshold && acc < accuracyThreshold && sd >= sdThreshold)
+    {
+        // Person tried a lot but did not succeed
+        category = 4;
+    }
+    else if (vari >= variabilityThreshold && acc >= accuracyThreshold && sd >= sdThreshold)
+    {
+        // Person tried a lot and succeeded
+        category = 5;
+    }
+    else if (vari > variabilityThreshold && acc >= accuracyThreshold && sd < sdThreshold)
+    {
+        // Person tried a little and succeeded
+        category = 6;
+    }
+
+    return {
+        category: category,
+        variability: vari,
+        sd: sd,
+        accuracy: acc,
+
+    };
+}
+
 async function loadRound(r)
 {
     r.roundContent.innerHTML = "";
 
     let avgTimeMacro = 0;
     let sdTimeMacro = 0;
-
+    let n = 1;
     for (const t of r.round)
     {
         let d = document.createElement("div");
@@ -87,24 +156,32 @@ async function loadRound(r)
             d.chartArea.classList.add("test-chart");
 
             let tClone = JSON.parse(JSON.stringify(t));
-            console.log(tClone)
 
             // Now consider max time
             let sampleRate = 100; // ms
-            let maxPoints = MAX_TIME * ( 1000 / sampleRate);
+            const time = Math.min(tClone.time, MAX_TIME);
+            let maxPoints = time * ( 1000 / sampleRate);
             tClone.dataPoints = tClone.dataPoints.slice(0, maxPoints);
             d.chartArea.appendChild(VIZ.drawTest(tClone, false));
         }
+        // const category = classifyGraph(t, n);
+        // t.category = category;
+        const category = (t.test ? t.test : t).category;
 
         d.label = document.createElement("div");
-        d.label.appendChild((()=>{let s=document.createElement("span"); s.innerText=`${t.title}, `; return s})());
+        d.label.appendChild((()=>{let s=document.createElement("span"); s.innerText=`${n}: ${t.title}, `; return s})());
         d.label.appendChild((()=>{let s=document.createElement("span"); s.innerText=`Time: ${roundN(t.time, 2)}`; return s})());
+        d.label.appendChild((()=>{let s=document.createElement("span"); s.innerText=`Category: ${roundN(category.category, 6)}`; return s})());
+        d.label.appendChild((()=>{let s=document.createElement("span"); s.innerText=`Variability: ${roundN(category.variability, 6)}`; return s})());
+        d.label.appendChild((()=>{let s=document.createElement("span"); s.innerText=`SD: ${roundN(category.sd, 6)}`; return s})());
+        d.label.appendChild((()=>{let s=document.createElement("span"); s.innerText=`Accuracy: ${roundN(category.accuracy, 3)}`; return s})());
         d.label.appendChild((()=>{let s=document.createElement("a"); s.innerText=`Load Chart`; s.addEventListener("click", ()=>createChart()); return s})());
         d.label.classList.add("test-label");
         d.appendChild(d.label);
         d.appendChild(d.chartArea);
 
         r.roundContent.appendChild(d);
+        n++;
     }
 }
 
@@ -140,6 +217,22 @@ async function loadPhase(p)
 
         const round = p.phase[q];
         d.round = round;
+
+        for (const t of round)
+        {
+            const data = t.test;
+
+            // Classify data
+            if (data)
+            {
+                t.test.category = classifyGraph(data);
+            }
+            else
+            {
+                t.category = classifyGraph(t);
+            }
+
+        }
 
         let avgTime = round.reduce((s,test)=>s+=test.time, 0) / round.length;
         let sdTime = round.reduce((s,test)=>s+=Math.sqrt((test.time - avgTime) ** 2), 0) / (round.length + 1);
@@ -342,7 +435,8 @@ export default class AnalysisTool
             else
             {
                 // Load all phases
-                loadPhase(p);
+                console.log(p.phase)
+                loadPhase(p, p.phase);
                 lastPhase = p;
             }
             p.phaseEnabled = !p.phaseEnabled;
@@ -389,7 +483,8 @@ export default class AnalysisTool
                 "Sex",
                 "Age",
                 "Music BG",
-                "Pitch ID"
+                "Pitch ID",
+                "Category"
             ];
 
             for (const o of options)
@@ -470,6 +565,22 @@ export default class AnalysisTool
         // Create list of all entries
         let tmpResults = [...this.results];
 
+
+        // Categorize all tests
+        for (const res of tmpResults)
+        {
+            for (const phase of Object.values(res.results))
+            {
+                for (const round of Object.keys(phase))
+                {
+                    for (const test in phase[round])
+                    {
+                        phase[round][test].category = classifyGraph(phase[round][test]);
+                    }
+                }
+            }
+        }
+
         const presurvey = function(result)
         {
             return Object.values(result.surveys)[0];
@@ -526,6 +637,19 @@ export default class AnalysisTool
                                 const filterValue = value;
                                 return new Function("a","b", `return a ${comparison} b`)(resultValue, filterValue);
                             });
+                        break;
+                    case "Category":
+                        for (const res of tmpResults)
+                        {
+                            for (const phase of Object.values(res.results))
+                            {
+                                for (const round of Object.keys(phase))
+                                {
+                                    phase[round] = phase[round].filter(v=>v.category.category==parseInt(value));
+                                    console.log(phase[round])
+                                }
+                            }
+                        }
                         break;
                     default:
                         console.log("undefined filter: ", filter);
@@ -678,7 +802,7 @@ export default class AnalysisTool
                     for (const test of round)
                     {
                         try {
-                            summary["results"][phaseName][roundName].push({time:test.time}); // sum val, 
+                            summary["results"][phaseName][roundName].push({time:test.time, test:test}); // sum val, 
                         }
                         catch {
                             console.log("Could not load survey");

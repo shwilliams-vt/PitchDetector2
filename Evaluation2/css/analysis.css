@@ -112,10 +112,11 @@ body
 
 .test-label
 {
-    font-size: 18px;
+    font-size: 12px;
     padding-left: 40px;
     display: flex;
-    gap: 20%;
+    /* gap: 20%; */
+    gap: 45px;
 }
 .test-label > span > br{
     display: none;
