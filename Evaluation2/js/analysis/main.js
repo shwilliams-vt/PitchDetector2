@@ -465,6 +465,11 @@ export default class AnalysisTool
 
     }
 
+    reset()
+    {
+
+    }
+
     async loadAggregateView(filters)
     {
         this.content.innerHTML = "";
@@ -562,8 +567,23 @@ export default class AnalysisTool
         {
             appendFilter();
         }
-        // Create list of all entries
-        let tmpResults = [...this.results];
+        // Create list of all entries deep copy
+        // let tmpResults = [...this.results];
+        let tmpResults = this.results.map(v=>{
+            let newV = {...v};
+            newV.results = {...newV.results};
+            for (const phase of Object.keys(newV.results))
+            {
+                newV.results[phase] = {...newV.results[phase]};
+                for (const round of Object.keys(newV.results[phase]))
+                {
+                    // console.log(newV.results[phase][round])
+                    newV.results[phase][round] = [...newV.results[phase][round]];
+                }   
+            }
+
+            return newV;
+        });
 
 
         // Categorize all tests
@@ -639,14 +659,16 @@ export default class AnalysisTool
                             });
                         break;
                     case "Category":
+                        let vals = value.split(",").map(v=>parseInt(v));
                         for (const res of tmpResults)
                         {
                             for (const phase of Object.values(res.results))
                             {
                                 for (const round of Object.keys(phase))
                                 {
-                                    phase[round] = phase[round].filter(v=>v.category.category==parseInt(value));
+                                    phase[round] = phase[round].filter(v=>vals.includes(v.category.category));
                                     console.log(phase[round])
+                                    // console.log(phase[round])
                                 }
                             }
                         }
@@ -1229,10 +1251,30 @@ export default class AnalysisTool
         }
     }
 
+    async categorize()
+    {
+        for (const result of this.results)
+        {
+            for (const phase of Object.keys(result.results))
+            {
+                for (const round of Object.keys(result.results[phase]))
+                {
+                    let tests = result.results[phase][round];
+                    for (const test of tests)
+                    {
+                        test.category = classifyGraph(test);
+                    }
+                }
+            }
+
+            return result;
+        }
+    }
+
     async init()
     {
-
         await this.loadFiles();
+        await this.categorize();
         await this.draw();
         await this.setMode("individual");
     }
