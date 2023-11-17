@@ -81,9 +81,9 @@ function classifyGraph(test, n)
     const scale = max - min;
     // const vari = Math.abs(test.dataPoints.reduce((s,v)=>s+=(v[1] - startValue) / scale, 0)) / test.dataPoints.length;
     const avg = test.dataPoints.reduce((s,v)=>s+=parseFloat(v[1]), 0) / test.dataPoints.length;
-    const sd = Math.sqrt(test.dataPoints.reduce((s,v)=>s+=((v[1] - avg))**2, 0) / test.dataPoints.length) / scale;
+    const sd = Math.sqrt(test.dataPoints.reduce((s,v)=>s+=((v[1] - avg))**2, 0) / (test.dataPoints.length - 1)) / scale;
     const acc = 1 - Math.abs(test.dataPoints[test.dataPoints.length - 1][1] - endValue) / scale;
-    const err = Math.sqrt(test.dataPoints.reduce((s,v)=>s+=((v[1]-endValue)**2), 0)) / test.dataPoints.length / scale;
+    const err = Math.sqrt(test.dataPoints.reduce((s,v)=>s+=((v[1]-endValue)**2), 0)) / (test.dataPoints.length - 1) / scale;
     
     let vari = 0;
     for (let i = 1; i < test.dataPoints.length; i++)
@@ -121,7 +121,7 @@ function classifyGraph(test, n)
         // Person tried a lot and succeeded
         category = 5;
     }
-    else if (vari > variabilityThreshold && acc >= accuracyThreshold && sd < sdThreshold)
+    else if (vari >= variabilityThreshold && acc >= accuracyThreshold && sd < sdThreshold)
     {
         // Person tried a little and succeeded
         category = 6;
@@ -489,7 +489,8 @@ export default class AnalysisTool
                 "Age",
                 "Music BG",
                 "Pitch ID",
-                "Category"
+                "Category",
+                "Phase3Choice"
             ];
 
             for (const o of options)
@@ -667,12 +668,19 @@ export default class AnalysisTool
                                 for (const round of Object.keys(phase))
                                 {
                                     phase[round] = phase[round].filter(v=>vals.includes(v.category.category));
-                                    console.log(phase[round])
                                     // console.log(phase[round])
                                 }
                             }
                         }
                         break;
+                        case "Phase3Choice":
+                            tmpResults = tmpResults.filter(v=>{
+                                console.log(v.surveys)
+                                const resultValue = v.surveys["phase3"]["method-used"].toLowerCase();
+                                const filterValue = value.toLowerCase()     ;
+                                return new Function("a","b", `return a ${comparison} b`)(resultValue, filterValue);
+                            });
+                            break;
                     default:
                         console.log("undefined filter: ", filter);
                         tmpResults = [];
@@ -838,6 +846,15 @@ export default class AnalysisTool
         let num = document.createElement("span");
         num.innerHTML = `<br><h2>Showing ${totalNum} of ${this.results.length} records (${roundN((100 * totalNum / this.results.length), 2)}% included)</h2><br>`
         this.content.appendChild(num);
+
+        function dResults(asJSON)
+        {
+            if (asJSON)
+                UTILS.downloadJSON(JSON.stringify(tmpResults));
+            else
+                UTILS.downloadJSONAsCSV(tmpResults);
+        }
+        this.content.appendChild((()=>{let d = document.createElement("button"); d.innerText="Download Filtered Results"; d.addEventListener("click", ()=>dResults(false)); return d})());
 
         this.content.appendChild((()=>{let d = document.createElement("div");d.innerHTML = "<h3>Survey Results</h3>"; return d})());
 

@@ -31,6 +31,180 @@ function downloadJSON(results)
     e.setAttribute("download", "Results from " + new Date());
     e.click();
 } 
+function downloadJSONAsCSV(results)
+{
+    let e = document.createElement("a");
+    console.log(results)
+
+    let r = null;
+    for (const res of results)
+    {
+        if (Object.keys(res.surveys.phase2))
+        {
+            r = res;
+            break;
+        }
+    }
+    if (r == null)
+    {
+        r = results[0];
+    }
+
+    // Build csv
+    let csv = "";
+    for (const key of Object.keys(r))
+    {
+        if (key === "surveys")
+        {
+            break;
+        }
+        csv += key + ",";
+    }
+
+    const surveys = [
+        "pre-survey",
+        "phase1",
+        "phase2",
+        "phase3",
+        "phase4",
+        "phase-1-tlx",
+        "phase-2-tlx",
+        "phase-3-tlx",
+        "phase-4-tlx",
+        "sus"
+    ];
+
+    const survey_num = {};
+    surveys.map(n=>survey_num[n]=0);
+
+    for (const key of surveys)
+    {
+        if (r.surveys[key])
+        {
+            csv += key + ",";
+        
+            for (const q of Object.keys(r.surveys[key]))
+            {
+                csv += q + ",";
+                survey_num[key]++;
+            }
+        }
+    }
+
+    const phases = [
+        "phase1",
+        "phase2",
+        "phase3",
+        "phase4"
+    ]
+
+    for (const key of phases)
+    {
+        if (r.results[key])
+        {
+            csv += key + ",";
+            for (const round of Object.keys(r.results[key]))
+            {
+                csv += round + ",";
+                csv += "t_avg,";
+                csv += "t_sd,";
+            }
+            
+        }
+        
+    }
+
+    csv += "\n";
+
+    // Now iterate through results
+    for (const result of results)
+    {
+
+        for (const key of Object.keys(result))
+        {
+            if (key === "surveys")
+            {
+                break;
+            }
+            csv += result[key] + ",";
+        }
+
+        for (const key of surveys)
+        {
+            let n = 0;
+            if (result.surveys[key])
+            {
+                
+                csv += ",";
+                for (const q of Object.keys(result.surveys[key]))
+                {
+                    if (q === "can-whistle")
+                        console.log(result.surveys[key])
+                    let s = result.surveys[key][q] + "";
+                    s=s.replaceAll("\\\"", "\'").replaceAll(",", " ");
+                    s = "\"" + s + "\"";
+                    if (s === "\"\"")
+                    {
+                        s= q;
+                    }
+                    csv += s + ",";
+                    n++;
+                }
+                if (n != survey_num[key])
+                {
+                    for (let i = 0; i < survey_num[key] - n; i++)
+                    {
+                        csv += ",";
+                    }
+                }
+                
+            }
+            else
+            {
+                csv += ",";
+                for (const q of Object.keys(r.surveys[key]))
+                {
+                    csv += ",";
+                }
+            }
+        }
+    
+    
+        for (const key of phases)
+        {
+            if (result.results[key])
+            {
+                csv += ",";
+                for (const round of Object.keys(result.results[key]))
+                {
+                    csv += ",";
+                    let avg = result.results[key][round].reduce((s,v)=>s+=v.time, 0) / result.results[key][round].length;
+                    csv += avg + ",";
+                    csv += Math.sqrt(result.results[key][round].reduce((s,v)=>s+=((v.time-avg) ** 2), 0) / (result.results[key][round].length - 1)) + ",";
+                }
+            }
+            else
+            {
+                csv += ",";
+                for (const round of Object.keys(r.results[key]))
+                {
+                    csv += ",";
+                    csv += ",";
+                    csv += ",";
+                }
+            }
+        }
+        csv += "\n";
+    }
+    
+
+
+    let blob = new Blob([csv], { type: "text/csv" });
+    let obj = URL.createObjectURL(blob);
+    e.setAttribute("href", obj);
+    e.setAttribute("download", "Results from " + new Date());
+    e.click();
+} 
 
 function postError(msg, e)
 {
@@ -120,4 +294,4 @@ async function waitUntil(condition)
 }
 
 
-export {loadHTMLResource, SHA256, waitOneFrame, downloadJSON, postError, waitUntil};
+export {loadHTMLResource, SHA256, waitOneFrame, downloadJSON, downloadJSONAsCSV, postError, waitUntil};
