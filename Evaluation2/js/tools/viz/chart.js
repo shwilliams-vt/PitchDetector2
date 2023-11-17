@@ -7,6 +7,9 @@ const defaultConfig = {
     type: 'line',
     data: {},
     options: {
+      animation: {
+        duration: 0
+      },
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
@@ -109,7 +112,8 @@ export default class ChartJS
                     label: params.subtitles[0],
                     data: datapoints[0],
                     borderColor: "#FF0000",
-                    fill: false,
+                    fill: true,
+                    backgroundColor: "rgba(255, 145, 68, 0.7)",
                     cubicInterpolationMode: 'monotone',
                     tension: 0.4
                 }
