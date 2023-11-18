@@ -470,6 +470,171 @@ export default class AnalysisTool
 
     }
 
+    fittsLawOld(results, phaseName)
+    {
+        // For fitts law, we need to normalize both x and y
+        const normalizedResultsX = [];
+        const normalizedResultsY= [];
+
+        // number of data points to interpolate
+        const nDataPoints = 1000;
+        function interpolate(x, xp, fp) {
+            var n = xp.length;
+            var i = 1;
+            while (i < n && x > xp[i]) {
+              i++;
+            }
+            var x0 = xp[i - 1];
+            var x1 = xp[i];
+            var f0 = fp[i - 1];
+            var f1 = fp[i];
+            return f0 + (f1 - f0) * (x - x0) / (x1 - x0);
+          }
+
+        for (const result of results)
+        {
+            const phase = result.results[phaseName];
+
+            // Consider Round 1 only for this study
+            const round1 = phase["Round 1"];
+            for (const test of round1)
+            {
+                // TODO Add entire test
+                // a. Normalize y (| end - start | => [0, 1])
+                const end = test.metadata.endValue;
+                const range = end - test.metadata.startValue;
+                const tMax = test.dataPoints[test.dataPoints.length - 1][0];
+                // b. Normalize x (tf - t0 => [0, 1])
+                const normalizedTestX = [];
+                const normalizedTestY = [];
+
+                for (const tpos of test.dataPoints)
+                {
+                    normalizedTestX.push(tpos[0] / tMax);
+                    normalizedTestY.push((tpos[1] - end) / range);
+                }
+                normalizedResultsX.push(normalizedTestX);
+                normalizedResultsY.push(normalizedTestY);
+            }
+        }
+
+        // TODO aggregate and plot
+        let aggregate = [];
+        let step = 1 / nDataPoints;
+        for (let i = 0; i <= 1; i += step)
+        {
+            let avg = 0;
+            for (const normalized in normalizedResultsX)
+            {
+                const normalX = normalizedResultsX[normalized];
+                const normalY = normalizedResultsY[normalized];
+
+                avg += interpolate(i, normalX, normalY)
+            }
+            avg /= normalizedResultsX.length;
+            aggregate.push([i, avg]);
+        }
+        
+        
+        // console.log(aggregate);
+
+        // Formulate aggregate into a pseudo test
+        const test = {
+            dataPoints: aggregate,
+            endValue: 0,
+            metadata: {
+                endValue: 0,
+                min: -1,
+                max: 1
+            },
+            title:"Fitts' Law"
+        };
+
+        return test;
+
+    }
+
+    fittsLaw(results, phaseName)
+    {
+        
+        const aggregate = [];
+
+        function linearRegression(x, y) {
+            var n = x.length;
+            var sumX = 0;
+            var sumY = 0;
+            var sumXY = 0;
+            var sumXX = 0;
+            var sumYY = 0;
+        
+            for (var i = 0; i < n; i++) {
+                sumX += x[i];
+                sumY += y[i];
+                sumXY += x[i] * y[i];
+                sumXX += x[i] * x[i];
+                sumYY += y[i] * y[i];
+            }
+        
+            var slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            var intercept = (sumY - slope * sumX) / n;
+            var r = (n * sumXY - sumX * sumY) / Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));
+            var r2 = r * r;
+        
+            return {slope: slope, intercept: intercept, r: r, r2: r2};
+        }
+        
+
+        // Define boundaries
+        const range = 1000.0;
+        const tMax = Math.max(...results.map(result=>Math.max(...result.results[phaseName]["Round 1"].map(test=>test.time))));
+        let n = 0;
+        let maxTime = 15;
+
+        for (const result of results)
+        {
+            const phase = result.results[phaseName];
+
+            // Consider Round 1 only for this study
+            const round1 = phase["Round 1"];
+            for (const test of round1)
+            {
+
+                if (test.time > maxTime)
+                    continue;
+                
+                // const t = test.time / tMax;
+                // const d = Math.abs(test.metadata.endValue - test.metadata.startValue) / range;
+                const t = test.time;
+                const d = Math.abs(test.metadata.endValue - test.metadata.startValue);
+                const other = Math.log2(2 * d);
+                aggregate.push([other, t]);
+                n++;
+            }
+        }
+
+        const regress = [];
+        const d = linearRegression(aggregate.map(x=>x[0]), aggregate.map(y=>y[1]));
+        for (let i = 0; i < aggregate.length; i++)
+        {
+            regress.push([aggregate[i][0], d.slope * aggregate[i][0] + d.intercept]);
+        }
+
+        // Formulate aggregate into a pseudo test
+        const test = {
+            dataPoints: [aggregate, regress],
+            endValue: 0,
+            metadata: {
+                endValue: 0,
+                min: 0,
+                max: 20
+            },
+            title:`Fitts' Law (n=${n}, m=${d.slope.toFixed(3)}, b=${d.intercept.toFixed(3)}, r=${d.r.toFixed(3)}, r2=${d.r2.toFixed(4)})`
+        };
+
+        return test;
+
+    }
+
     async loadAggregateView(filters)
     {
         this.content.innerHTML = "";
@@ -903,6 +1068,17 @@ export default class AnalysisTool
 
         // Pitch ID
         await drawMacroChart("Pitch ID", pitchIDSkillsVals);
+
+        // Fitts law
+        // await drawMacroChart("Fitt's Law", this.fittsLaw(tmpResults, "phase3"));
+        this.content.appendChild((()=>
+            {
+                let d = document.createElement("div");
+                d.style.height = "600px";
+                d.appendChild(VIZ.drawPlot(this.fittsLaw(tmpResults, "phase3"), false));
+                return d;
+            })()            
+        );
         
         this.content.appendChild((()=>{let d = document.createElement("div");d.innerHTML = "<h3>Phase Results</h3>"; return d})());
 

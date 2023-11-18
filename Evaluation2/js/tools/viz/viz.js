@@ -1,18 +1,42 @@
 import ChartJS from "./chart.js"
 
+function drawPlot(test, interactive)
+{
+    let datapoints1 = test.dataPoints[0].map(p=>{ return {x:p[0], y:p[1]}});
+    let datapoints2 = test.dataPoints[1].map(p=>{ return {x:p[0], y:p[1]}});
+
+    let min = test.metadata.min || 0;
+    let max = test.metadata.max || 1000;
+
+    let chartParams = {
+        scatter: true,
+        title: test.title,
+        subtitles: ["Test Results", "Correct Value"],
+        datapoints: [datapoints1, datapoints2],
+        min: min,
+        max: max,
+        interactive: interactive
+    };
+    let chart = new ChartJS(chartParams);
+    return chart.generateHTML();
+}
+
 function drawTest(test, interactive)
 {
     let labels = test.dataPoints.map(xy=>{ return parseInt(xy[0]).toString() });
     let datapoints1 = test.dataPoints.map(xy=>{ return xy[1] });
     let datapoints2 = test.dataPoints.map(xy=>{ return test.metadata.endValue });
 
+    let min = test.metadata.min || 0;
+    let max = test.metadata.max || 1000;
+
     let chartParams = {
         title: test.title,
         subtitles: ["Test Results", "Correct Value"],
         labels: labels,
         datapoints: [datapoints1, datapoints2],
-        min: 0,
-        max: 1000,
+        min: min,
+        max: max,
         interactive: interactive
     };
     let chart = new ChartJS(chartParams);
@@ -50,4 +74,4 @@ function drawEvaluation(results, interactive)
     return domElem;
 }
 
-export {drawTest, drawRound, drawEvaluation}
+export {drawTest, drawPlot, drawRound, drawEvaluation}

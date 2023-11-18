@@ -79,47 +79,111 @@ export default class ChartJS
         let datapoints = params.datapoints // [0, 20, 20, 60, 60, 120, NaN, 180, 120, 125, 105, 110, 170];
 
         let data;
-        if (datapoints.length == 2)
+        if (params.scatter)
         {
-          data = {
-            labels: labels,
-            datasets: [
+          const config = {
+            type: 'scatter',
+            data: {
+              datasets:
+              [
                 {
-                    label: params.subtitles[0],
-                    data: datapoints[0],
-                    borderColor: "#FF0000",
-                    fill: false,
-                    cubicInterpolationMode: 'monotone',
-                    tension: 0.4
+                  label : "Actual",
+                  data : params.datapoints[0],
+                  showLine : false,
+                  fill : false,
+                  borderColor : "rgb(255,0,0)"
                 },
                 {
-                    label: params.subtitles[1],
-                    data: datapoints[1],
-                    borderColor: "#0000FF",
-                    fill: false,
-                    cubicInterpolationMode: 'monotone',
-                    tension: 0.4
+                  label : "Linear",
+                  data : params.datapoints[1],
+                  showLine : true,
+                  fill : false,
+                  borderColor : "rgb(0,0,255)"
                 }
-            ]
+              ]            
+            },
+            options: {
+              animation: {
+                duration: 0
+              },
+              scales: {
+                xAxes: [{
+                  title: {
+                    display: true,
+                    text: "log2(2D/W)"
+                  }
+                }],
+                yAxes: [{
+                  title: {
+                    display: true,
+                    text: "t"
+                  },
+                  ticks: {
+                    min: params.min,
+                    max: params.max
+                  }
+                }]
+              }
+            }
           };
+          let scope = this;
+          let t = FIRST_ID - 1;
+          config.options.animation = {onComplete: (()=>{scope.onRender(t)})}
+          config.options.title = {
+            display: true,
+            text: params.title
+          }
+
+          this.chartParams = config;
+          this.params = params;
+          this.rendered = false;
+          return;
         }
         else
         {
-          data = {
-            labels: labels,
-            datasets: [
-                {
-                    label: params.subtitles[0],
-                    data: datapoints[0],
-                    borderColor: "#FF0000",
-                    fill: true,
-                    backgroundColor: "rgba(255, 145, 68, 0.7)",
-                    cubicInterpolationMode: 'monotone',
-                    tension: 0.4
-                }
-            ]
-          };
+          if (datapoints.length == 2)
+          {
+            data = {
+              labels: labels,
+              datasets: [
+                  {
+                      label: params.subtitles[0],
+                      data: datapoints[0],
+                      borderColor: "#FF0000",
+                      fill: false,
+                      cubicInterpolationMode: 'monotone',
+                      tension: 0.4
+                  },
+                  {
+                      label: params.subtitles[1],
+                      data: datapoints[1],
+                      borderColor: "#0000FF",
+                      fill: false,
+                      cubicInterpolationMode: 'monotone',
+                      tension: 0.4
+                  }
+              ]
+            };
+          }
+          else
+          {
+            data = {
+              labels: labels,
+              datasets: [
+                  {
+                      label: params.subtitles[0],
+                      data: datapoints[0],
+                      borderColor: "#FF0000",
+                      fill: true,
+                      backgroundColor: "rgba(255, 145, 68, 0.7)",
+                      cubicInterpolationMode: 'monotone',
+                      tension: 0.4
+                  }
+              ]
+            };
+          }
         }
+        
 
         config.data = data;
         let scope = this;
