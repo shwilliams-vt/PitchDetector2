@@ -502,7 +502,7 @@ export default class AnalysisTool
                 // TODO Add entire test
                 // a. Normalize y (| end - start | => [0, 1])
                 const end = test.metadata.endValue;
-                const range = end - test.metadata.startValue;
+                const range = Math.abs(end - test.metadata.startValue);
                 const tMax = test.dataPoints[test.dataPoints.length - 1][0];
                 // b. Normalize x (tf - t0 => [0, 1])
                 const normalizedTestX = [];
@@ -511,7 +511,7 @@ export default class AnalysisTool
                 for (const tpos of test.dataPoints)
                 {
                     normalizedTestX.push(tpos[0] / tMax);
-                    normalizedTestY.push((tpos[1] - end) / range);
+                    normalizedTestY.push(Math.abs(tpos[1] - end) / range);
                 }
                 normalizedResultsX.push(normalizedTestX);
                 normalizedResultsY.push(normalizedTestY);
@@ -540,19 +540,95 @@ export default class AnalysisTool
 
         // Formulate aggregate into a pseudo test
         const test = {
-            dataPoints: aggregate,
+            dataPoints: [aggregate,[]],
             endValue: 0,
             metadata: {
                 endValue: 0,
                 min: -1,
                 max: 1
             },
-            title:"Fitts' Law"
+            title:"Average Normalized Task Graph",
+            labels : {
+                x: "Time (normalized)",
+                y: "Distance (normalized)"
+            }
         };
 
         return test;
 
     }
+
+    fittsLawOldAll(results, phaseName)
+    {
+        // For fitts law, we need to normalize both x and y
+        const normalizedResults = [];
+
+        for (const result of results)
+        {
+            const phase = result.results[phaseName];
+
+            // Consider Round 1 only for this study
+            const round1 = phase["Round 1"];
+            for (const test of round1)
+            {
+                // TODO Add entire test
+                // a. Normalize y (| end - start | => [0, 1])
+                const end = test.metadata.endValue;
+                const range = Math.abs(end - test.metadata.startValue);
+                const tMax = test.dataPoints[test.dataPoints.length - 1][0];
+                // b. Normalize x (tf - t0 => [0, 1])
+                const normalizedTest = [];
+
+                for (const tpos of test.dataPoints)
+                {
+                    normalizedTest.push([tpos[0] / tMax, Math.abs(tpos[1] - end) / range]);
+                }
+                normalizedResults.push(normalizedTest);
+            }
+        }
+
+        // TODO aggregate and plot
+        // let aggregate = [];
+        // let step = 1 / nDataPoints;
+        // for (let i = 0; i <= 1; i += step)
+        // {
+        //     let avg = 0;
+        //     for (const normalized in normalizedResultsX)
+        //     {
+        //         const normalX = normalizedResultsX[normalized];
+        //         const normalY = normalizedResultsY[normalized];
+
+        //         avg += interpolate(i, normalX, normalY)
+        //     }
+        //     avg /= normalizedResultsX.length;
+        //     aggregate.push([i, avg]);
+        // }
+
+        UTILS.downloadJSON(normalizedResults);
+        
+        
+        // console.log(aggregate);
+
+        // Formulate aggregate into a pseudo test
+        const test = {
+            dataPoints: [],
+            endValue: 0,
+            metadata: {
+                endValue: 0,
+                min: -1,
+                max: 1
+            },
+            title:"All Normalized Task Graph",
+            labels: {
+                x: "Time (normalized)",
+                y: "Distance (normalized)"
+            }
+        };
+
+        return test;
+
+    }
+
 
     fittsLaw(results, phaseName)
     {
@@ -588,7 +664,8 @@ export default class AnalysisTool
         const range = 1000.0;
         const tMax = Math.max(...results.map(result=>Math.max(...result.results[phaseName]["Round 1"].map(test=>test.time))));
         let n = 0;
-        let maxTime = 15;
+        let nT = 0;
+        let maxTime = 999;//15;
 
         for (const result of results)
         {
@@ -598,7 +675,7 @@ export default class AnalysisTool
             const round1 = phase["Round 1"];
             for (const test of round1)
             {
-
+                nT++;
                 if (test.time > maxTime)
                     continue;
                 
@@ -607,7 +684,7 @@ export default class AnalysisTool
                 const t = test.time;
                 const d = Math.abs(test.metadata.endValue - test.metadata.startValue);
                 const other = Math.log2(2 * d);
-                aggregate.push([other, t]);
+                aggregate.push([t, other]);
                 n++;
             }
         }
@@ -628,7 +705,97 @@ export default class AnalysisTool
                 min: 0,
                 max: 20
             },
-            title:`Fitts' Law (n=${n}, m=${d.slope.toFixed(3)}, b=${d.intercept.toFixed(3)}, r=${d.r.toFixed(3)}, r2=${d.r2.toFixed(4)})`
+            title:`Fitts' Law (n=${n}/${nT}, m=${d.slope.toFixed(3)}, b=${d.intercept.toFixed(3)}, r=${d.r.toFixed(3)}, r2=${d.r2.toFixed(4)})`,
+            labels : {
+                x: "Time (seconds)",
+                y: "log2(2 x Distance)"
+            }
+        };
+
+        return test;
+
+    }
+
+    dLaw(results, phaseName)
+    {
+        
+        const aggregate = [];
+
+        function linearRegression(x, y) {
+            var n = x.length;
+            var sumX = 0;
+            var sumY = 0;
+            var sumXY = 0;
+            var sumXX = 0;
+            var sumYY = 0;
+        
+            for (var i = 0; i < n; i++) {
+                sumX += x[i];
+                sumY += y[i];
+                sumXY += x[i] * y[i];
+                sumXX += x[i] * x[i];
+                sumYY += y[i] * y[i];
+            }
+        
+            var slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            var intercept = (sumY - slope * sumX) / n;
+            var r = (n * sumXY - sumX * sumY) / Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));
+            var r2 = r * r;
+        
+            return {slope: slope, intercept: intercept, r: r, r2: r2};
+        }
+        
+
+        // Define boundaries
+        const range = 1000.0;
+        const tMax = Math.max(...results.map(result=>Math.max(...result.results[phaseName]["Round 1"].map(test=>test.time))));
+        let n = 0;
+        let nT = 0;
+        let maxTime = 999;//15;
+
+        for (const result of results)
+        {
+            const phase = result.results[phaseName];
+
+            // Consider Round 1 only for this study
+            const round1 = phase["Round 1"];
+            for (const test of round1)
+            {
+                nT++;
+                if (test.time > maxTime)
+                    continue;
+                
+                // const t = test.time / tMax;
+                // const d = Math.abs(test.metadata.endValue - test.metadata.startValue) / range;
+                const t = test.time;
+                const d = Math.abs(test.metadata.endValue - test.metadata.startValue);
+                const other = d;
+                aggregate.push([t, other]);
+                n++;
+            }
+        }
+
+        const regress = [];
+        const d = linearRegression(aggregate.map(x=>x[0]), aggregate.map(y=>y[1]));
+        for (let i = 0; i < aggregate.length; i++)
+        {
+            regress.push([aggregate[i][0], d.slope * aggregate[i][0] + d.intercept]);
+        }
+
+        // Formulate aggregate into a pseudo test
+        const test = {
+            dataPoints: [aggregate, regress],
+            endValue: 0,
+            metadata: {
+                endValue: 0,
+                min: 0,
+                max: 100
+            },
+            title:`Time by Distance (n=${n}/${nT}, m=${d.slope.toFixed(3)}, b=${d.intercept.toFixed(3)}, r=${d.r.toFixed(3)}, r2=${d.r2.toFixed(4)})`,
+            labels : {
+                x: "Time (seconds)",
+                y: "Distance"
+            }
         };
 
         return test;
@@ -1076,6 +1243,31 @@ export default class AnalysisTool
                 let d = document.createElement("div");
                 d.style.height = "600px";
                 d.appendChild(VIZ.drawPlot(this.fittsLaw(tmpResults, "phase3"), false));
+                return d;
+            })()            
+        );
+        this.content.appendChild((()=>
+            {
+                let d = document.createElement("div");
+                d.style.height = "600px";
+                d.appendChild(VIZ.drawPlot(this.dLaw(tmpResults, "phase3"), false));
+                return d;
+            })()            
+        );
+        this.content.appendChild((()=>
+            {
+                let d = document.createElement("div");
+                d.style.height = "600px";
+                d.appendChild(VIZ.drawPlotMany(this.fittsLawOldAll(tmpResults, "phase3"), false));
+                return d;
+            })()            
+        );
+        
+        this.content.appendChild((()=>
+            {
+                let d = document.createElement("div");
+                d.style.height = "600px";
+                d.appendChild(VIZ.drawPlot(this.fittsLawOld(tmpResults, "phase3"), false));
                 return d;
             })()            
         );

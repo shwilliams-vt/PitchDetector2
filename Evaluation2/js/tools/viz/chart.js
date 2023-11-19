@@ -81,51 +81,125 @@ export default class ChartJS
         let data;
         if (params.scatter)
         {
-          const config = {
-            type: 'scatter',
-            data: {
-              datasets:
-              [
-                {
-                  label : "Actual",
-                  data : params.datapoints[0],
-                  showLine : false,
-                  fill : false,
-                  borderColor : "rgb(255,0,0)"
-                },
-                {
-                  label : "Linear",
-                  data : params.datapoints[1],
-                  showLine : true,
-                  fill : false,
-                  borderColor : "rgb(0,0,255)"
-                }
-              ]            
-            },
-            options: {
-              animation: {
-                duration: 0
-              },
-              scales: {
-                xAxes: [{
-                  title: {
-                    display: true,
-                    text: "log2(2D/W)"
-                  }
-                }],
-                yAxes: [{
-                  title: {
-                    display: true,
-                    text: "t"
+          let config;
+          if (params.datapoints.length < 3)
+          {
+            config = {
+              type: 'scatter',
+              data: {
+                datasets:
+                [
+                  {
+                    label : "Actual",
+                    data : params.datapoints[0],
+                    showLine : false,
+                    fill : false,
+                    borderColor : "rgb(255,0,0)"
                   },
-                  ticks: {
-                    min: params.min,
-                    max: params.max
+                  {
+                    label : "Linear",
+                    data : params.datapoints[1],
+                    showLine : true,
+                    fill : false,
+                    borderColor : "rgb(0,0,255)"
                   }
-                }]
+                ]            
+              },
+              options: {
+                animation: {
+                  duration: 0
+                },
+                scales: {
+                  xAxes: [{
+                    title: {
+                      display: true,
+                      text: "log2(2D/W)"
+                    },
+                    scaleLabel: {
+                      display: true,
+                      labelString: labels.x
+                    }
+                  }],
+                  yAxes: [{
+                    title: {
+                      display: true,
+                      text: "t",
+                    },
+                    scaleLabel: {
+                      display: true,
+                      labelString: labels.y
+                    },
+                    ticks: {
+                      min: params.min,
+                      max: params.max
+                    }
+                  }]
+                },
+                legend: { 
+                  display: true,
+                  position: 'bottom',
+                  labels: {
+                      fontColor: '#333'
+                  }
+                }
               }
+            };
+          }
+          else
+          {
+            config = {
+              type: 'scatter',
+              data: {
+                         
+              },
+              options: {
+                animation: {
+                  duration: 0
+                },
+                scales: {
+                  xAxes: [{
+                    title: {
+                      display: true,
+                      text: "log2(2D/W)"
+                    },
+                    scaleLabel: {
+                      display: true,
+                      labelString: labels.x
+                    }
+                  }],
+                  yAxes: [{
+                    title: {
+                      display: true,
+                      text: "t"
+                    },
+                    scaleLabel: {
+                      display: true,
+                      labelString: labels.y
+                    },
+                    ticks: {
+                      min: params.min,
+                      max: params.max
+                    }
+                  }]
+                },
+                plugins: { legend: { display: false } },
+                legend: { display: false }
+              }
+            };
+
+            let datasets = [];
+            for (const dataset of params.datapoints)
+            {
+              datasets.push({
+                data : dataset,
+                showLine : false,
+                fill : false,
+                borderColor : "rgb(255,0,0,0.5)"
+              });
             }
-          };
+            config.data.datasets = datasets;
+          }
+          
           let scope = this;
           let t = FIRST_ID - 1;
           config.options.animation = {onComplete: (()=>{scope.onRender(t)})}

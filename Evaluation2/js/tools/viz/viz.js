@@ -15,7 +15,33 @@ function drawPlot(test, interactive)
         datapoints: [datapoints1, datapoints2],
         min: min,
         max: max,
-        interactive: interactive
+        interactive: interactive,
+        labels: test.labels
+    };
+    let chart = new ChartJS(chartParams);
+    return chart.generateHTML();
+}
+function drawPlotMany(test, interactive)
+{
+    // let datapoints1 = test.dataPoints[0].map(p=>{ return {x:p[0], y:p[1]}});
+    // let datapoints2 = test.dataPoints[1].map(p=>{ return {x:p[0], y:p[1]}});
+
+    let datapoints = test.dataPoints.map(dp=>{
+        return dp.map(p=>{ return {x:p[0], y:p[1]}})
+    })
+
+    let min = test.metadata.min || 0;
+    let max = test.metadata.max || 1000;
+
+    let chartParams = {
+        scatter: true,
+        title: test.title,
+        subtitles: ["Test Results", "Correct Value"],
+        datapoints: datapoints,
+        min: min,
+        max: max,
+        interactive: interactive,
+        labels: test.labels
     };
     let chart = new ChartJS(chartParams);
     return chart.generateHTML();
@@ -74,4 +100,4 @@ function drawEvaluation(results, interactive)
     return domElem;
 }
 
-export {drawTest, drawPlot, drawRound, drawEvaluation}
+export {drawTest, drawPlot, drawPlotMany, drawRound, drawEvaluation}

@@ -138,8 +138,6 @@ function downloadJSONAsCSV(results)
                 csv += ",";
                 for (const q of Object.keys(result.surveys[key]))
                 {
-                    if (q === "can-whistle")
-                        console.log(result.surveys[key])
                     let s = result.surveys[key][q] + "";
                     s=s.replaceAll("\\\"", "\'").replaceAll(",", " ");
                     s = "\"" + s + "\"";
@@ -179,8 +177,34 @@ function downloadJSONAsCSV(results)
                 {
                     csv += ",";
                     let avg = result.results[key][round].reduce((s,v)=>s+=v.time, 0) / result.results[key][round].length;
-                    csv += avg + ",";
-                    csv += Math.sqrt(result.results[key][round].reduce((s,v)=>s+=((v.time-avg) ** 2), 0) / (result.results[key][round].length - 1)) + ",";
+                    let sd = Math.sqrt(result.results[key][round].reduce((s,v)=>s+=((v.time-avg) ** 2), 0) / (result.results[key][round].length - 1));
+
+                    if (isNaN(sd))
+                    {
+                        if (!isNaN(avg))
+                        {
+                            sd = 0;
+                            csv += avg + ",";
+                            csv += sd + ",";
+                        }
+                        else
+                        {
+                            csv += ",,";
+                        }
+                    }
+                    else
+                    {
+                        if (isNaN(avg))
+                        {
+                            csv += ",,";
+                        }
+                        else
+                        {
+                            csv += avg + ",";
+                            csv += sd + ",";
+                        }
+                    }
+                    
                 }
             }
             else

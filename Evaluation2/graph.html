@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            padding:10;margin: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+    </style>
+    <script src="https://d3js.org/d3.v4.js"></script>
+</head>
+<body>
+    <input type="file" id="files">
+    <div id="main">
+
+    </div>
+</body>
+</html>
+
+<script type="module">
+
+    function createChart(data)
+    {
+        console.log(data)
+
+        const datasets = data[0];//.slice(0, 5);
+        const config = 
+        {
+            type: 'scatter',
+            data: { 
+                datasets: datasets.map(dataset=>{
+                    return {
+                        data: dataset.map(xy=>{ return {x:xy[0],y:xy[1]}}),
+                        borderColor: "rgb(255,0,0)"
+                    }
+                }) 
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Chart.js Scatter Chart'
+                }
+                },
+                legend: { display: false }
+            },
+        };
+
+        let canvas = document.createElement("canvas");
+        const chart = new Chart(canvas.getContext("2d"), config);
+        document.getElementById("main").appendChild(canvas);
+    }
+
+    function createD3chart(data)
+    {
+        const yScale = 16;
+        const datasets = data[0].map(ds=>ds.map(xy=>{return {x:xy[0],y:xy[1]/yScale}}));
+
+        console.log(datasets)
+
+        var margin = {top: 10, right: 30, bottom: 30, left: 60},
+        width = 460 - margin.left - margin.right,
+        height = 400 - margin.top - margin.bottom;
+
+        let yMax = Math.max(...datasets.map(dataset=>dataset.map(xy=>xy[1])));
+
+
+        var svg = d3.select("#main")
+            .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+                .attr("id", "hold")
+                .attr("transform",
+                    "translate(" + margin.left + "," + margin.top + ")");
+
+            //Read the data
+
+            // Add X axis
+            var x = d3.scaleLinear()
+                .domain([0, 1])
+                .range([ 0, width ]);
+            svg.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x));
+
+            // Add Y axis
+            var y = d3.scaleLinear()
+                .domain([-yScale, yScale])
+                .range([ height, 0]);
+            svg.append("g")
+                .call(d3.axisLeft(y));
+
+            // Add dots
+            // svg.append('g')
+            //     .selectAll("dot")
+            //     .data(megaData)
+            //     .enter()
+            //     .append("circle")
+            //     .attr("cx", function (d) { return x(d.x); } )
+            //     .attr("cy", function (d) { return y(d.y); } )
+            //     .attr("r", 1.5)
+            //     .style("fill", "#69b3a2")
+
+
+            var lineFunction = d3.line()
+                .x(function(d) { return (d.x) * width; })
+                .y(function(d) { return (1-d.y) * height/2; });
+
+                let i = 0;
+            for (const data of datasets)
+            {
+                // if (i > 0) break;
+                // console.log(data)
+
+
+                d3.select("#hold")
+                    .append("path")
+                    .datum(data)
+                    .attr("d", lineFunction)
+                    .attr("stroke", "black")
+                    .attr("stroke-width", 1)
+                    .attr("fill", "none");
+
+                    i++;
+            }
+            
+    }
+
+    const startProgram = async function(e) 
+    {
+        const files = Object.values(e.target.files);
+        const jsonFileReader = new FileReader();
+
+        let datapoints = [];
+        // Load all files
+        for (const file of files) {
+
+            await new Promise(resolve=>
+            {
+                // Set on file read callback
+                function onRead(e)
+                {
+                    datapoints.push(JSON.parse(e.target.result))
+                    resolve();
+                }
+                jsonFileReader.onload = onRead;
+                jsonFileReader.readAsText(file);
+            })
+        }
+
+        createD3chart(datapoints);
+    }
+    
+
+    document.getElementById("files").addEventListener("change", startProgram);
+</script>
+
