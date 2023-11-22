@@ -109,12 +109,12 @@ function classifyGraph(test, n)
     else if (vari >= variabilityThreshold && acc < accuracyThreshold && sd < sdThreshold)
     {
         // Person tried a little but did not succeed
-        category = 3;
+        category = 4;
     }
     else if (vari >= variabilityThreshold && acc < accuracyThreshold && sd >= sdThreshold)
     {
         // Person tried a lot but did not succeed
-        category = 4;
+        category = 3;
     }
     else if (vari >= variabilityThreshold && acc >= accuracyThreshold && sd >= sdThreshold)
     {
